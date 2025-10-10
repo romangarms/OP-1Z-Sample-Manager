@@ -1,3 +1,7 @@
+h1 {
+  text-align: center;
+}
+
 #input-size-measurer {
   position: absolute;
   visibility: hidden;
@@ -5,3 +9,41 @@
   font: inherit;
 }
 
+#ffmpeg-settings > div:first-child,
+.main > div {
+  font-weight: 500;
+  margin-bottom: 10px;
+  margin-top: 20px;
+}
+
+input[type="text"],
+input[placeholder] {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 14px;
+  margin: 5px;
+}
+
+.form-select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 14px;
+  min-width: 200px;
+  margin: 5px;
+}
+
+p {
+  margin: 10px 0;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+hr {
+  border: none;
+  border-top: 2px solid var(--background-color);
+  margin: 30px 0;
+}
