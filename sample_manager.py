@@ -193,3 +193,26 @@ def move_sample():
     except Exception as e:
         current_app.logger.error(f"Move error: {e}")
         return {"error": "Move failed"}, 500
+
+@sample_manager_bp.route("/open-opz-directory")
+def open_opz_directory():
+    OPZ_MOUNT_PATH = get_config_setting("OPZ_MOUNT_PATH")
+
+    if not os.path.exists(OPZ_MOUNT_PATH):
+        return {"error": "OP-Z directory not found"}, 404
+
+    try:
+        import platform
+        system = platform.system()
+
+        if system == "Windows":
+            os.startfile(OPZ_MOUNT_PATH)
+        elif system == "Darwin":  # macOS
+            subprocess.run(["open", OPZ_MOUNT_PATH])
+        else:  # Linux
+            subprocess.run(["xdg-open", OPZ_MOUNT_PATH])
+
+        return {"status": "opened"}, 200
+    except Exception as e:
+        current_app.logger.error(f"Error opening directory: {e}")
+        return {"error": "Failed to open directory"}, 500

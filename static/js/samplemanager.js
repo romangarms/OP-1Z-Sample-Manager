@@ -240,3 +240,15 @@ window.addEventListener("dragover", (e) => {
 window.addEventListener("drop", (e) => {
     e.preventDefault();
 });
+
+async function openOpzDirectory() {
+    try {
+        const response = await fetch("http://localhost:5000/open-opz-directory");
+        if (!response.ok) {
+            throw new Error("Failed to open directory");
+        }
+    } catch (error) {
+        console.error("Failed to open OP-Z directory:", error);
+        alert("Could not open OP-Z directory.");
+    }
+}
