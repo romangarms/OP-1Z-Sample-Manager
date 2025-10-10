@@ -76,6 +76,9 @@ function openExplorer() {
 document.addEventListener('DOMContentLoaded', () => {
     setupDragDrop('drum-samples', 'drum');
     setupDragDrop('synth-samples', 'synth');
+
+    // Initialize Lucide icons
+    lucide.createIcons();
 });
 
 // Prevent default drag-and-drop behavior on the whole page

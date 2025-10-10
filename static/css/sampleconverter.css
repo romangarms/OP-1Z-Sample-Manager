@@ -1,3 +1,72 @@
+h1 {
+    text-align: center;
+}
+
+#file-list {
+    display: flex;
+    gap: 20px;
+    margin: 30px auto;
+    max-width: 1000px;
+    flex-wrap: wrap;
+}
+
+.drop-zone-container {
+    flex: 1;
+    min-width: 300px;
+    margin: 0 10px;
+}
+
+.samplepackbox h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--text-color);
+    font-weight: bold;
+    padding-bottom: 8px;
+}
+
+.drop-zone {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    text-align: center;
+    gap: 15px;
+    background-color: var(--offwhite);
+    border-radius: 5px;
+    padding: 30px;
+}
+
+.drop-zone:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.drop-icon {
+    width: 64px;
+    height: 64px;
+    stroke-width: 1.5;
+    color: var(--text-color);
+    opacity: 0.6;
+}
+
+.drop-text {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.drop-hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    font-style: italic;
+}
+
 .samplepackbox.filled {
     background-color: #63cc73;
 }
@@ -10,4 +79,15 @@
 .samplepackbox.dragover {
     background-color: #d0ebff;
     border: 2px dashed #339af0;
+}
+
+.samplepackbox.dragover .drop-icon {
+    color: #339af0;
+    opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    #file-list {
+        flex-direction: column;
+    }
 }

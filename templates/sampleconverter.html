@@ -15,13 +15,28 @@
 
 <button onclick="openExplorer()" class="btn btn-secondary">Open Converted Directory</button>
 
-<h5>Drag and drop or click on one of the dark gray areas to convert files</h5>
-
 <div id="file-list">
-    <h3>Drum Samples</h3>
-    <div class="samplepackbox" id="drum-samples"></div>
-    <h3>Synth Samples</h3>
-    <div class="samplepackbox" id="synth-samples"></div>
+    <div class="drop-zone-container">
+        <div class="samplepackbox">
+            <h3>Drum Samples</h3>
+            <div class="drop-zone" id="drum-samples">
+                <i data-lucide="drum" class="drop-icon"></i>
+                <p class="drop-text">Drop files here or click to browse</p>
+                <p class="drop-hint">Max 12 seconds</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="drop-zone-container">
+        <div class="samplepackbox">
+            <h3>Synth Samples</h3>
+            <div class="drop-zone" id="synth-samples">
+                <i data-lucide="keyboard-music" class="drop-icon"></i>
+                <p class="drop-text">Drop files here or click to browse</p>
+                <p class="drop-hint">Max 6 seconds</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 
