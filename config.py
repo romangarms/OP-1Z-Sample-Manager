@@ -113,7 +113,7 @@ def set_config_setting_route():
         run_config_task(config_option)
         return jsonify({"success": True})
 
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
         return jsonify({"error": "Internal server error"}), 500
