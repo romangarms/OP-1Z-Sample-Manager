@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>OP-1 Tape Export</title>
+{% endblock %}
+
+{% block main %}
+<a href="/" class="btn btn-secondary">Home Page</a>
+
+<h1>OP-1 Tape Export</h1>
+
+<div class="samplepackbox" style="text-align: center; margin-top: 30px;">
+    <i data-lucide="construction" style="width: 64px; height: 64px; margin-bottom: 20px;"></i>
+    <h3>Coming Soon</h3>
+    <p>Export OP-1 tape AIFF files to your Downloads folder for use in your DAW.</p>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+    });
+</script>
+{% endblock %}

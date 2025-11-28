@@ -1,9 +1,17 @@
 :root {
-    --first-color: #027340;
-    --second-color: #0186bb;
-    --third-color: #d6a212;
-    --fourth-color: #cc0c2f;
+    /* OP-Z colors */
+    --first-color: #027340;      /* Green */
+    --second-color: #0186bb;     /* Blue */
+    --third-color: #d6a212;      /* Yellow */
+    --fourth-color: #cc0c2f;     /* Red */
+
+    /* OP-1 colors */
+    --op1-white: #f5f5f5;        /* Off-white */
+    --op1-orange: #e85d04;       /* Orange */
+
+    /* UI colors */
     --background-color: #a1a1a1;
+    --neutral-gray: #6c757d;      /* Neutral gray for meta/settings */
     --offwhite: #e5e5e5;
     --text-color: #212529;
 }
