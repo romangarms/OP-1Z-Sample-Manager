@@ -1,0 +1,377 @@
+/* ===========================================
+   OP-1 Tape Export Page Styles
+   =========================================== */
+
+h1 {
+    text-align: center;
+}
+
+/* Section containers */
+.tape-section,
+.album-section {
+    margin: 20px 10px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--offwhite);
+}
+
+.section-header h2 {
+    margin: 0;
+    color: var(--text-color);
+}
+
+/* Master controls */
+.master-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.master-controls .btn {
+    padding: 8px 12px;
+}
+
+/* Time display */
+.time-display {
+    text-align: center;
+    margin-bottom: 15px;
+    font-family: monospace;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    background-color: var(--offwhite);
+    padding: 8px 15px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.tape-section > .time-display {
+    display: block;
+    margin: 0 auto 15px auto;
+    width: fit-content;
+}
+
+/* Track containers */
+.track-container {
+    background-color: var(--offwhite);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.track-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.track-label {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.track-label::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+/* Track color indicators */
+.track-container[data-track="1"] .track-label::before {
+    background-color: var(--first-color);
+}
+
+.track-container[data-track="2"] .track-label::before {
+    background-color: var(--second-color);
+}
+
+.track-container[data-track="3"] .track-label::before {
+    background-color: var(--third-color);
+}
+
+.track-container[data-track="4"] .track-label::before {
+    background-color: var(--fourth-color);
+}
+
+.track-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Mute/Solo buttons */
+.mute-btn,
+.solo-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.mute-btn:hover,
+.solo-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.mute-btn.active {
+    background-color: var(--fourth-color);
+    color: white;
+    border-color: var(--fourth-color);
+}
+
+.mute-btn.active svg {
+    stroke: white;
+}
+
+.solo-btn.active {
+    background-color: var(--third-color);
+    color: white;
+    border-color: var(--third-color);
+}
+
+/* Volume slider */
+.volume-slider {
+    width: 100px;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #ddd;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--second-color);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--second-color);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+/* Waveform container */
+.waveform-container {
+    background-color: white;
+    border-radius: 6px;
+    overflow: hidden;
+    min-height: 80px;
+    position: relative;
+}
+
+.waveform-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.waveform-container.loaded .waveform-loading {
+    display: none;
+}
+
+.waveform-container.error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fourth-color);
+    background-color: #fff5f5;
+}
+
+.waveform-container.not-found {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    background-color: #f8f8f8;
+}
+
+.waveform-container.not-found::after {
+    content: 'No audio file';
+}
+
+/* Album section */
+.album-side {
+    background-color: var(--offwhite);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.side-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.side-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.side-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.side-controls .btn {
+    padding: 6px 10px;
+}
+
+.album-side .time-display {
+    margin-top: 10px;
+    margin-bottom: 0;
+    font-size: 1rem;
+}
+
+/* Export buttons */
+.export-btn {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.export-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Empty/disabled track state */
+.track-container.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.album-side.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Spinner animation for loading */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Loading overlay */
+.loading-overlay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.loading-overlay.hidden {
+    display: none;
+}
+
+.loading-content {
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+.loading-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 15px;
+    color: var(--second-color);
+}
+
+.loading-content h3 {
+    margin: 0 0 10px 0;
+    color: var(--text-color);
+}
+
+.loading-content p {
+    margin: 0 0 20px 0;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.progress-container {
+    background-color: var(--offwhite);
+    border-radius: 10px;
+    height: 20px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: var(--first-color);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .section-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .track-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .side-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .volume-slider {
+        width: 80px;
+    }
+}

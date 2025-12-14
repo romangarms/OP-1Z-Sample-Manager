@@ -1,21 +1,34 @@
 import sys
+import os
 import webbrowser
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-from config import load_config, run_all_config_tasks, get_config_setting, set_config_setting, config_bp
-from sample_converter import sample_converter_bp
-from sample_manager import sample_manager_bp
-from dialogs import dialog_bp
+from blueprints.config import load_config, run_all_config_tasks, get_config_setting, set_config_setting, config_bp
+from blueprints.sample_converter import sample_converter_bp
+from blueprints.sample_manager import sample_manager_bp
+from blueprints.tape_export import tape_export_bp
+from blueprints.dialogs import dialog_bp
+from blueprints.backup import backup_bp
+
+# Get base path for PyInstaller or normal execution
+if getattr(sys, 'frozen', False):
+    BASE_DIR = sys._MEIPASS
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # setup
-app = Flask(__name__)
+app = Flask(__name__,
+            template_folder=os.path.join(BASE_DIR, 'templates'),
+            static_folder=os.path.join(BASE_DIR, 'static'))
 CORS(app)  # Enable CORS for all routes
 
 # Register blueprints
 app.register_blueprint(sample_converter_bp)
 app.register_blueprint(sample_manager_bp)
+app.register_blueprint(tape_export_bp)
 app.register_blueprint(config_bp)
 app.register_blueprint(dialog_bp)
+app.register_blueprint(backup_bp)
 
 # run before server startup at the end of this file
 def app_startup_tasks():
@@ -50,6 +63,10 @@ def sampleconverter():
 def samplemanager():
     return render_template("samplemanager.html")
 
+@app.route("/tapeexport")
+def tapeexport():
+    return render_template("tapeexport.html")
+
 @app.route("/configeditor")
 def configeditor():
     return render_template("configeditor.html")
@@ -57,6 +74,10 @@ def configeditor():
 @app.route("/utilitysettings")
 def utilitysettings():
     return render_template("utilitysettings.html")
+
+@app.route("/backup")
+def backup():
+    return render_template("backup.html")
 
 @app.route("/open-external-link")
 def open_external_link():

@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% from 'macros.html' import nav_button %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="/static/css/tapeexport.css">
+{% endblock %}
+
+{% block title %}
+<title>OP-1 Tape Export</title>
+{% endblock %}
+
+{% block main %}
+
+<h1>OP-1 Tape Export</h1>
+
+{{ nav_button('/', 'Home Page') }}
+
+<div id="device-error-container" class="error-container container" hidden>
+    <p id="device-error-message">OP-1 not configured. Please configure your OP-1 in <a href="/utilitysettings" class="btn btn-danger">Utility Settings</a></p>
+</div>
+
+<!-- Loading overlay while converting audio -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content samplepackbox">
+        <i data-lucide="loader-2" class="spin loading-icon"></i>
+        <h3>Preparing Audio Files</h3>
+        <p id="loading-status">Converting AIFF to WAV for playback...</p>
+        <div class="progress-container">
+            <div class="progress-bar" id="loading-progress"></div>
+        </div>
+    </div>
+</div>
+
+<div id="main-content" hidden>
+    <!-- Tape Tracks Section -->
+    <div class="tape-section samplepackbox">
+        <div class="section-header">
+            <h2>Tape Tracks</h2>
+            <div class="master-controls">
+                <button id="tape-play" class="btn btn-primary" title="Play">
+                    <i data-lucide="play"></i>
+                </button>
+                <button id="tape-pause" class="btn btn-secondary" title="Pause">
+                    <i data-lucide="pause"></i>
+                </button>
+                <button id="tape-stop" class="btn btn-warning" title="Stop">
+                    <i data-lucide="square"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="time-display">
+            <span id="tape-current-time">0:00</span> / <span id="tape-total-time">0:00</span>
+        </div>
+
+        <div id="tape-tracks-container">
+            <!-- Track 1 -->
+            <div class="track-container" data-track="1">
+                <div class="track-header">
+                    <span class="track-label">Track 1</span>
+                    <div class="track-controls">
+                        <button class="mute-btn" title="Mute">
+                            <i data-lucide="volume-2"></i>
+                        </button>
+                        <button class="solo-btn" title="Solo">S</button>
+                        <input type="range" class="volume-slider" min="0" max="100" value="100" title="Volume">
+                    </div>
+                </div>
+                <div class="waveform-container" id="waveform-track-1">
+                    <div class="waveform-loading">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Track 2 -->
+            <div class="track-container" data-track="2">
+                <div class="track-header">
+                    <span class="track-label">Track 2</span>
+                    <div class="track-controls">
+                        <button class="mute-btn" title="Mute">
+                            <i data-lucide="volume-2"></i>
+                        </button>
+                        <button class="solo-btn" title="Solo">S</button>
+                        <input type="range" class="volume-slider" min="0" max="100" value="100" title="Volume">
+                    </div>
+                </div>
+                <div class="waveform-container" id="waveform-track-2">
+                    <div class="waveform-loading">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Track 3 -->
+            <div class="track-container" data-track="3">
+                <div class="track-header">
+                    <span class="track-label">Track 3</span>
+                    <div class="track-controls">
+                        <button class="mute-btn" title="Mute">
+                            <i data-lucide="volume-2"></i>
+                        </button>
+                        <button class="solo-btn" title="Solo">S</button>
+                        <input type="range" class="volume-slider" min="0" max="100" value="100" title="Volume">
+                    </div>
+                </div>
+                <div class="waveform-container" id="waveform-track-3">
+                    <div class="waveform-loading">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Track 4 -->
+            <div class="track-container" data-track="4">
+                <div class="track-header">
+                    <span class="track-label">Track 4</span>
+                    <div class="track-controls">
+                        <button class="mute-btn" title="Mute">
+                            <i data-lucide="volume-2"></i>
+                        </button>
+                        <button class="solo-btn" title="Solo">S</button>
+                        <input type="range" class="volume-slider" min="0" max="100" value="100" title="Volume">
+                    </div>
+                </div>
+                <div class="waveform-container" id="waveform-track-4">
+                    <div class="waveform-loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <button id="export-tape" class="btn btn-primary export-btn">
+            <i data-lucide="download"></i> Export All Tape Tracks
+        </button>
+    </div>
+
+    <!-- Album Section -->
+    <div class="album-section samplepackbox">
+        <div class="section-header">
+            <h2>Album</h2>
+        </div>
+
+        <!-- Side A -->
+        <div class="album-side" data-side="a">
+            <div class="side-header">
+                <h3>Side A</h3>
+                <div class="side-controls">
+                    <button class="play-btn btn btn-primary" title="Play">
+                        <i data-lucide="play"></i>
+                    </button>
+                    <button class="pause-btn btn btn-secondary" title="Pause">
+                        <i data-lucide="pause"></i>
+                    </button>
+                    <button class="stop-btn btn btn-warning" title="Stop">
+                        <i data-lucide="square"></i>
+                    </button>
+                    <input type="range" class="volume-slider" min="0" max="100" value="100" title="Volume">
+                </div>
+            </div>
+            <div class="waveform-container" id="waveform-side-a">
+                <div class="waveform-loading">Loading...</div>
+            </div>
+            <div class="time-display">
+                <span class="current-time">0:00</span> / <span class="total-time">0:00</span>
+            </div>
+        </div>
+
+        <!-- Side B -->
+        <div class="album-side" data-side="b">
+            <div class="side-header">
+                <h3>Side B</h3>
+                <div class="side-controls">
+                    <button class="play-btn btn btn-primary" title="Play">
+                        <i data-lucide="play"></i>
+                    </button>
+                    <button class="pause-btn btn btn-secondary" title="Pause">
+                        <i data-lucide="pause"></i>
+                    </button>
+                    <button class="stop-btn btn btn-warning" title="Stop">
+                        <i data-lucide="square"></i>
+                    </button>
+                    <input type="range" class="volume-slider" min="0" max="100" value="100" title="Volume">
+                </div>
+            </div>
+            <div class="waveform-container" id="waveform-side-b">
+                <div class="waveform-loading">Loading...</div>
+            </div>
+            <div class="time-display">
+                <span class="current-time">0:00</span> / <span class="total-time">0:00</span>
+            </div>
+        </div>
+
+        <button id="export-album" class="btn btn-primary export-btn">
+            <i data-lucide="download"></i> Export Album Sides
+        </button>
+    </div>
+</div>
+
+<script src="https://unpkg.com/wavesurfer.js@7"></script>
+<script src="/static/js/tapeexport.js"></script>
+
+{% endblock %}

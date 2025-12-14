@@ -155,10 +155,10 @@ document.getElementById('save-button').addEventListener('click', async () => {
       body: JSON.stringify({ content: dmxContent })
     });
 
-    alert('All configurations saved successfully!');
+    toast.success('All configurations saved');
   } catch (err) {
     console.error('Error saving configs:', err);
-    alert('Error saving configurations. Check console for details.');
+    toast.error('Error saving configurations');
   }
 });
 
