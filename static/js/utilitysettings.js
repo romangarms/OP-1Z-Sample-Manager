@@ -4,11 +4,11 @@ function resetConfig() {
   })
     .then(response => response.json())
     .then(data => {
-      alert('Config reset! Please restart the app.');
+      toast.success('Please restart the app', 'Config Reset');
       window.location.reload();
     })
     .catch(error => {
-      alert('Error resetting config.');
+      toast.error('Error resetting config');
       console.error(error);
     });
 }

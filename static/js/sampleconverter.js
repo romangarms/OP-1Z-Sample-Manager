@@ -67,9 +67,18 @@ async function handleFiles(files, type) {
         }
     }
 
-    // Show all results in one alert
+    // Show results as toast
     console.log("Conversion results:", results);
-    alert(results.join('\n'));
+    const successCount = results.filter(r => r.includes('Success') || r.includes('Converted')).length;
+    const errorCount = results.length - successCount;
+
+    if (errorCount === 0) {
+        toast.success(`${successCount} file(s) converted`, 'Conversion Complete');
+    } else if (successCount === 0) {
+        toast.error(`${errorCount} file(s) failed`, 'Conversion Failed');
+    } else {
+        toast.warning(`${successCount} converted, ${errorCount} failed`, 'Partial Conversion');
+    }
 }
 
 

@@ -7,6 +7,7 @@ from blueprints.sample_converter import sample_converter_bp
 from blueprints.sample_manager import sample_manager_bp
 from blueprints.tape_export import tape_export_bp
 from blueprints.dialogs import dialog_bp
+from blueprints.backup import backup_bp
 
 # setup
 app = Flask(__name__)
@@ -18,6 +19,7 @@ app.register_blueprint(sample_manager_bp)
 app.register_blueprint(tape_export_bp)
 app.register_blueprint(config_bp)
 app.register_blueprint(dialog_bp)
+app.register_blueprint(backup_bp)
 
 # run before server startup at the end of this file
 def app_startup_tasks():

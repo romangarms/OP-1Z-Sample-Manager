@@ -605,11 +605,11 @@ async function exportTapeTracks() {
         const result = await response.json();
 
         if (result.error) {
-            alert(`Export failed: ${result.error}`);
+            toast.error(result.error, 'Export Failed');
         } else if (result.status === 'success') {
-            alert(`Exported ${result.exported.length} file(s) to Downloads:\n${result.exported.join('\n')}`);
+            toast.success(`${result.exported.length} file(s) exported to Downloads`, 'Export Complete');
         } else if (result.status === 'partial') {
-            alert(`Exported ${result.exported.length} file(s) with some errors:\n${result.errors.join('\n')}`);
+            toast.warning(`Exported ${result.exported.length} file(s) with some errors`, 'Partial Export');
         }
     });
 }
@@ -627,11 +627,11 @@ async function exportAlbumTracks() {
         const result = await response.json();
 
         if (result.error) {
-            alert(`Export failed: ${result.error}`);
+            toast.error(result.error, 'Export Failed');
         } else if (result.status === 'success') {
-            alert(`Exported ${result.exported.length} file(s) to Downloads:\n${result.exported.join('\n')}`);
+            toast.success(`${result.exported.length} file(s) exported to Downloads`, 'Export Complete');
         } else if (result.status === 'partial') {
-            alert(`Exported ${result.exported.length} file(s) with some errors:\n${result.errors.join('\n')}`);
+            toast.warning(`Exported ${result.exported.length} file(s) with some errors`, 'Partial Export');
         }
     });
 }

@@ -83,7 +83,7 @@ async function openDirectory() {
         }
     } catch (error) {
         console.error(`Failed to open ${currentDevice.toUpperCase()} directory:`, error);
-        alert(`Could not open ${currentDevice === 'opz' ? 'OP-Z' : 'OP-1'} directory.`);
+        toast.error(`Could not open ${currentDevice === 'opz' ? 'OP-Z' : 'OP-1'} directory.`);
     }
 }
 
@@ -170,30 +170,34 @@ function updateStorageDisplay(device, storage, extraData = {}) {
  * @param {string} path - Full path to the sample
  * @param {function} refreshCallback - Function to call after successful deletion
  */
-async function deleteSample(device, path, refreshCallback) {
+function deleteSample(device, path, refreshCallback) {
     const filename = path.split('/').pop();
-    const confirmed = confirm(`Delete "${filename}"?`);
-    if (!confirmed) return;
 
-    try {
-        const response = await fetch('/delete-sample', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: path, device: device })
-        });
+    showConfirmModal(
+        'Delete Sample',
+        `Delete "<strong>${escapeHtml(filename)}</strong>"?`,
+        async () => {
+            try {
+                const response = await fetch('/delete-sample', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: path, device: device })
+                });
 
-        if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || 'Failed to delete file');
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to delete file');
+                }
+
+                if (refreshCallback) {
+                    await refreshCallback();
+                }
+            } catch (err) {
+                console.error('Failed to delete sample:', err);
+                toast.error(err.message, 'Delete Failed');
+            }
         }
-
-        if (refreshCallback) {
-            await refreshCallback();
-        }
-    } catch (err) {
-        console.error('Failed to delete sample:', err);
-        alert(`Failed to delete file: ${err.message}`);
-    }
+    );
 }
 
 // ============================================
@@ -299,7 +303,7 @@ async function fetchOpzSamples() {
                         await fetchOpzSamples();
                     } catch (err) {
                         console.error("Failed to move sample:", err);
-                        alert("Could not move sample.");
+                        toast.error("Could not move sample");
                     }
                 });
 
@@ -521,7 +525,7 @@ function setupOp1SubdirectoryDropZone(subdirDiv, parentFolder, subdirName) {
                 }
             } catch (err) {
                 console.error('Failed to upload file:', err);
-                alert(`Failed to upload ${file.name}: ${err.message}`);
+                toast.error(`${file.name}: ${err.message}`, 'Upload Failed');
             }
         }
 
@@ -564,7 +568,7 @@ function setupOp1SectionDropZone(parentFolder) {
             const files = await getFilesFromDirectory(entry);
 
             if (files.length === 0) {
-                alert('The folder is empty.');
+                toast.warning('The folder is empty');
                 return;
             }
 
@@ -588,11 +592,13 @@ function setupOp1SectionDropZone(parentFolder) {
 
                 const result = await response.json();
                 if (result.errors && result.errors.length > 0) {
-                    alert(`Some files failed to upload: ${result.errors.join(', ')}`);
+                    toast.warning(`Some files failed: ${result.errors.join(', ')}`, 'Partial Upload');
+                } else {
+                    toast.success('Folder uploaded', 'Upload Complete');
                 }
             } catch (err) {
                 console.error('Failed to upload folder:', err);
-                alert(`Failed to upload folder: ${err.message}`);
+                toast.error(err.message, 'Upload Failed');
             }
 
             await fetchOp1Samples();
@@ -634,9 +640,10 @@ async function createOp1Subdirectory(parentFolder) {
         }
 
         await fetchOp1Samples();
+        toast.success('Folder created');
     } catch (err) {
         console.error('Failed to create subdirectory:', err);
-        alert(`Failed to create folder: ${err.message}`);
+        toast.error(err.message, 'Create Failed');
     }
 }
 
@@ -659,36 +666,41 @@ async function renameOp1Subdirectory(path) {
         }
 
         await fetchOp1Samples();
+        toast.success('Folder renamed');
     } catch (err) {
         console.error('Failed to rename subdirectory:', err);
-        alert(`Failed to rename folder: ${err.message}`);
+        toast.error(err.message, 'Rename Failed');
     }
 }
 
-async function deleteOp1Subdirectory(path) {
+function deleteOp1Subdirectory(path) {
     const parts = path.split('/');
     const name = parts[1];
 
-    const confirmed = confirm(`Delete folder "${name}" and all its contents?`);
-    if (!confirmed) return;
+    showConfirmModal(
+        'Delete Folder',
+        `Delete folder "<strong>${escapeHtml(name)}</strong>" and all its contents?`,
+        async () => {
+            try {
+                const response = await fetch('/delete-op1-subdirectory', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: path })
+                });
 
-    try {
-        const response = await fetch('/delete-op1-subdirectory', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: path })
-        });
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to delete folder');
+                }
 
-        if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || 'Failed to delete folder');
+                await fetchOp1Samples();
+                toast.success('Folder deleted');
+            } catch (err) {
+                console.error('Failed to delete subdirectory:', err);
+                toast.error(err.message, 'Delete Failed');
+            }
         }
-
-        await fetchOp1Samples();
-    } catch (err) {
-        console.error('Failed to delete subdirectory:', err);
-        alert(`Failed to delete folder: ${err.message}`);
-    }
+    );
 }
 
 // ============================================
@@ -743,9 +755,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 await response.json();
                 await fetchOpzSamples();
+                toast.success('Sample uploaded');
             } catch (err) {
                 console.error("Failed to upload file:", err);
-                alert("Upload failed.");
+                toast.error('Upload failed');
             }
         });
     });

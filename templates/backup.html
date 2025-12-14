@@ -1,4 +1,9 @@
 {% extends "base.html" %}
+{% from 'macros.html' import nav_button %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="/static/css/backup.css">
+{% endblock %}
 
 {% block title %}
 <title>Backup & Restore</title>
@@ -8,44 +13,132 @@
 
 <h1>Backup & Restore</h1>
 
-<a href="/" class="btn btn-secondary">Home Page</a>
+<div class="header-row">
+    {{ nav_button('/', 'Home Page') }}
 
+    <div class="device-tabs">
+        <button class="device-tab active" data-device="opz">OP-Z</button>
+        <button class="device-tab" data-device="op1">OP-1</button>
+    </div>
+
+    <button onclick="openBackupsFolder()" class="btn btn-warning">
+        <i data-lucide="folder-open" style="width: 16px; height: 16px; margin-right: 5px;"></i>
+        Browse Backups
+    </button>
+</div>
+
+<!-- Error container for no devices configured -->
 <div id="device-error-container" class="error-container container" hidden>
     <p id="device-error-message">No devices configured. Please configure your OP-Z or OP-1 in <a href="/utilitysettings" class="btn btn-danger">Utility Settings</a></p>
 </div>
 
-<div id="main-content">
-<div class="samplepackbox" style="text-align: center; margin-top: 30px;">
-    <i data-lucide="construction" style="width: 64px; height: 64px; margin-bottom: 20px;"></i>
-    <h3>Coming Soon</h3>
-    <p>Backup and restore functionality for samples and projects is under development.</p>
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="loading-overlay hidden">
+    <div class="loading-content samplepackbox">
+        <i data-lucide="loader-2" class="spin loading-icon"></i>
+        <h3 id="loading-title">Processing...</h3>
+        <p id="loading-status">Please wait...</p>
+    </div>
 </div>
+
+<div id="main-content" hidden>
+    <!-- OP-Z Backup Section -->
+    <div id="opz-backup-section" class="backup-section samplepackbox">
+        <div class="section-header">
+            <h2>OP-Z Backups</h2>
+            <button id="opz-create-backup" class="btn btn-primary create-backup-btn">
+                <i data-lucide="plus"></i> Create Backup
+            </button>
+        </div>
+        <div id="opz-backup-list" class="backup-list">
+            <!-- Backup cards rendered here by JS -->
+        </div>
+    </div>
+
+    <!-- OP-1 Backup Section -->
+    <div id="op1-backup-section" class="backup-section samplepackbox" hidden>
+        <div class="section-header">
+            <h2>OP-1 Backups</h2>
+            <button id="op1-create-backup" class="btn btn-primary create-backup-btn">
+                <i data-lucide="plus"></i> Create Backup
+            </button>
+        </div>
+        <div id="op1-backup-list" class="backup-list">
+            <!-- Backup cards rendered here by JS -->
+        </div>
+    </div>
 </div>
 
-<script>
-    // Check if OP-Z or OP-1 is configured before allowing access
-    async function checkDeviceRequirement() {
-        try {
-            const [opzRes, op1Res] = await Promise.all([
-                fetch('/get-config-setting?config_option=OPZ_MOUNT_PATH').then(r => r.json()),
-                fetch('/get-config-setting?config_option=OP1_MOUNT_PATH').then(r => r.json())
-            ]);
+<!-- Restore Confirmation Modal -->
+<div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="restoreModalLabel">Confirm Restore</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="warning-box">
+                    <i data-lucide="alert-triangle"></i>
+                    <p><strong>Warning:</strong> This will erase all current data on the device and replace it with the backup contents.</p>
+                </div>
+                <p>Are you sure you want to restore "<span id="restore-backup-name"></span>"?</p>
+                <div class="backup-reminder">
+                    <i data-lucide="info"></i>
+                    <span>Consider creating a backup of your current device state first.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="executeRestore()">
+                    <i data-lucide="upload"></i> Restore
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-            const opzSet = opzRes.config_value && opzRes.config_value !== '';
-            const op1Set = op1Res.config_value && op1Res.config_value !== '';
+<!-- OP-1 Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">Preview Tape Tracks</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Loading state -->
+                <div id="preview-loading" class="text-center" style="padding: 40px;">
+                    <i data-lucide="loader-2" class="spin" style="width: 48px; height: 48px; color: var(--second-color);"></i>
+                    <p style="margin-top: 15px;">Preparing audio files...</p>
+                </div>
 
-            if (!opzSet && !op1Set) {
-                document.getElementById('device-error-container').hidden = false;
-                document.getElementById('main-content').hidden = true;
-            }
-        } catch (error) {
-            console.error('Error checking device configuration:', error);
-        }
-    }
-    checkDeviceRequirement();
+                <!-- Preview content -->
+                <div id="preview-content" hidden>
+                    <div class="preview-controls">
+                        <button id="preview-play" class="btn btn-primary">
+                            <i data-lucide="play"></i>
+                        </button>
+                        <button id="preview-pause" class="btn btn-secondary">
+                            <i data-lucide="pause"></i>
+                        </button>
+                        <button id="preview-stop" class="btn btn-warning">
+                            <i data-lucide="square"></i>
+                        </button>
+                        <span class="preview-time-display">
+                            <span id="preview-current-time">0:00</span> / <span id="preview-total-time">0:00</span>
+                        </span>
+                    </div>
+                    <div id="preview-tracks" class="preview-tracks">
+                        <!-- Track waveforms rendered by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    document.addEventListener('DOMContentLoaded', () => {
-        lucide.createIcons();
-    });
-</script>
+<script src="https://unpkg.com/wavesurfer.js@7"></script>
+<script src="/static/js/backup.js"></script>
+
 {% endblock %}

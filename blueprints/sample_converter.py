@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import tempfile
 import uuid
 from flask import Blueprint, request, jsonify, current_app
 from .config import get_config_setting
@@ -9,16 +10,21 @@ from .config import get_config_setting
 sample_converter_bp = Blueprint('sample_converter', __name__)
 
 # Constants
-UPLOAD_FOLDER = "uploads"
-CONVERTED_FOLDER = "converted"
-SYN_CONVERTED_FOLDER = "converted/synth"
-DRUM_CONVERTED_FOLDER = "converted/drum"
+UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), "opz_sample_manager_uploads")
 
-# Create necessary directories
+# Create upload directory
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(CONVERTED_FOLDER, exist_ok=True)
-os.makedirs(SYN_CONVERTED_FOLDER, exist_ok=True)
-os.makedirs(DRUM_CONVERTED_FOLDER, exist_ok=True)
+
+
+def get_converted_folder():
+    """Return converted folder path: WORKING_DIRECTORY/converted/"""
+    working_dir = get_config_setting("WORKING_DIRECTORY")
+    return os.path.join(working_dir, "converted")
+
+
+def get_converted_subfolder(sample_type):
+    """Return converted subfolder path: WORKING_DIRECTORY/converted/{sample_type}/"""
+    return os.path.join(get_converted_folder(), sample_type)
 
 # Helper function to convert audio files to OP-Z compatible format
 def convert_audio_file(input_path, output_path, sample_type):
@@ -71,9 +77,11 @@ def convert_sample():
     input_path = os.path.join(UPLOAD_FOLDER, str(uuid.uuid4()) + "_" + file.filename)
     file.save(input_path)
 
-    # Set output filename (for sample converter page, saves to converted/ folder)
+    # Set output path using working directory
     output_filename = os.path.splitext(os.path.basename(file.filename))[0] + ".aiff"
-    output_path = os.path.join(CONVERTED_FOLDER, sample_type, output_filename)
+    output_dir = get_converted_subfolder(sample_type)
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, output_filename)
 
     try:
         # Use shared conversion function
@@ -99,7 +107,8 @@ def convert_sample():
 # open the sample converter's converted folder in the file explorer
 @sample_converter_bp.route("/open-explorer", methods=["POST"])
 def open_explorer():
-    folder_path = os.path.join(os.path.abspath("."), CONVERTED_FOLDER)
+    folder_path = get_converted_folder()
+    os.makedirs(folder_path, exist_ok=True)
     try:
         if sys.platform.startswith("win"):
             subprocess.Popen(["explorer", folder_path])
