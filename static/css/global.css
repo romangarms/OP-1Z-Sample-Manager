@@ -16,8 +16,9 @@
     --text-color: #212529;
 }
 
-body {
+html, body {
     background-color: var(--offwhite);
+    overscroll-behavior: none;
 }
 
 .btn {

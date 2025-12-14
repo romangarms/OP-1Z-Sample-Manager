@@ -1,26 +1,47 @@
-import tkinter as tk
-from tkinter import filedialog
 import sys
-import argparse
 import subprocess
-import os
 from flask import Blueprint, jsonify, current_app
 
 # Create Blueprint for dialog routes
 dialog_bp = Blueprint('dialog', __name__)
 
-def run_dialog(mode):
+
+def run_dialog_macos(mode):
+    """Use native macOS dialogs via osascript."""
+    if mode == "folder":
+        script = 'POSIX path of (choose folder with prompt "Select a folder")'
+    elif mode == "file":
+        script = 'POSIX path of (choose file with prompt "Select a file")'
+    elif mode == "multi":
+        script = '''
+set selectedFiles to choose file with prompt "Select files" with multiple selections allowed
+set output to ""
+repeat with f in selectedFiles
+    set output to output & POSIX path of f & linefeed
+end repeat
+return output
+'''
+    elif mode == "save":
+        script = 'POSIX path of (choose file name with prompt "Save as")'
+    else:
+        return jsonify({"error": f"Unknown mode: {mode}"}), 400
+
     try:
         result = subprocess.run(
-            [sys.executable, "dialogs.py", mode],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=30
+            ['osascript', '-e', script],
+            capture_output=True,
+            text=True,
+            timeout=60
         )
-        output = result.stdout.decode().strip()
+
+        if result.returncode != 0:
+            # User cancelled the dialog
+            return jsonify({"error": "No selection made"}), 400
+
+        output = result.stdout.strip()
 
         if mode == "multi":
-            paths = [line for line in output.splitlines() if line]
+            paths = [line.strip() for line in output.splitlines() if line.strip()]
             current_app.logger.debug("Got multiple paths: %s", paths)
             if paths:
                 return jsonify({"paths": paths})
@@ -28,49 +49,30 @@ def run_dialog(mode):
                 return jsonify({"error": "No files selected"}), 400
 
         # Single path case (file, folder, save)
-        if output and (os.path.exists(output) or mode == "save"):
+        if output:
             current_app.logger.debug("Got path of: %s from user.", output)
             return jsonify({"path": output})
         else:
             return jsonify({"error": "No selection made"}), 400
 
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "Dialog timed out"}), 408
     except Exception as e:
-        current_app.logger.error("Exception in run_dialog: %s", e, exc_info=True)
+        current_app.logger.error("Exception in run_dialog_macos: %s", e, exc_info=True)
         return jsonify({"error": "An internal error has occurred."}), 500
 
 
-"""
-
-    DO NOT CHANGE THE PRINT STATMENTS IN THIS TO THE LOGGER, IT WILL BREAK IT
-
-
-"""
-
-
-def show_dialog(mode):
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes("-topmost", True)
-
-    match mode:
-        case "file":
-            path = filedialog.askopenfilename(title="Select a file")
-        case "multi":
-            paths = filedialog.askopenfilenames(title="Select one or more files")
-            if paths:
-                for p in paths:
-                    print(p)
-            return  # skip the rest
-        case "folder":
-            path = filedialog.askdirectory(title="Select a folder")
-        case "save":
-            path = filedialog.asksaveasfilename(title="Save file as")
-        case _:
-            print(f"Unknown mode: {mode}", file=sys.stderr)
-            sys.exit(1)
-
-    if path:
-        print(path)
+def run_dialog(mode):
+    """Run a file/folder selection dialog."""
+    try:
+        if sys.platform == 'darwin':
+            return run_dialog_macos(mode)
+        else:
+            # Fallback for non-macOS (would need different implementation)
+            return jsonify({"error": "File dialogs not supported on this platform in bundled app"}), 501
+    except Exception as e:
+        current_app.logger.error("Exception in run_dialog: %s", e, exc_info=True)
+        return jsonify({"error": "An internal error has occurred."}), 500
 
 # Flask routes to run dialogs for file/folder selection
 
@@ -93,13 +95,3 @@ def get_save_location():
 def get_user_multiple_files():
     current_app.logger.info("Getting multiple file paths from user")
     return run_dialog("multi")
-
-def main():
-    parser = argparse.ArgumentParser(description="Launch a native file dialog")
-    parser.add_argument("mode", choices=["file", "multi", "folder", "save"], help="Dialog mode")
-    args = parser.parse_args()
-
-    show_dialog(args.mode)
-
-if __name__ == "__main__":
-    main()

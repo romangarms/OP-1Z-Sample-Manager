@@ -1,4 +1,5 @@
 import sys
+import os
 import webbrowser
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
@@ -9,8 +10,16 @@ from blueprints.tape_export import tape_export_bp
 from blueprints.dialogs import dialog_bp
 from blueprints.backup import backup_bp
 
+# Get base path for PyInstaller or normal execution
+if getattr(sys, 'frozen', False):
+    BASE_DIR = sys._MEIPASS
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # setup
-app = Flask(__name__)
+app = Flask(__name__,
+            template_folder=os.path.join(BASE_DIR, 'templates'),
+            static_folder=os.path.join(BASE_DIR, 'static'))
 CORS(app)  # Enable CORS for all routes
 
 # Register blueprints

@@ -7,13 +7,14 @@ node_modules/
 
 # project config
 opz_sm_config.json
+working_dir/
 
-#pycache
+# pycache
 __pycache__
 
-#LLM
+# LLM
 .claude/
 
-#personal backups
-backups/
-converted/
+#Builds
+build/
+dist/
