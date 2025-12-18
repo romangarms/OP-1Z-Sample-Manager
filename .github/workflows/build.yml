@@ -27,19 +27,39 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Debug environment
+        run: |
+          echo "=== Architecture ==="
+          uname -m
+          echo "=== PyQt wheel info ==="
+          pip show PyQt5-Qt5 | grep -E "^(Name|Version)"
+          echo "=== Check binary architecture ==="
+          QTCORE=$(python -c "import PyQt5; print(PyQt5.__path__[0])")/Qt5/lib/QtCore.framework/Versions/5/QtCore
+          lipo -info "$QTCORE" 2>/dev/null || echo "Cannot check"
+
       - name: Build with PyInstaller
         run: pyinstaller opz-sample-manager.spec
 
-      - name: Create ZIP archive
+      - name: Debug build output
         run: |
-          cd dist
-          zip -r "OP-Z-Sample-Manager-macOS.zip" "OP-Z Sample Manager.app"
+          echo "=== dist/ contents ==="
+          ls -la dist/
+          echo "=== Size breakdown ==="
+          du -sh dist/*
+          echo "=== Largest files ==="
+          find "dist/OP-Z Sample Manager.app" -type f -exec du -h {} \; 2>/dev/null | sort -hr | head -10
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: OP-Z-Sample-Manager-macOS
-          path: dist/OP-Z-Sample-Manager-macOS.zip
+          path: dist/OP-Z Sample Manager.app
+
+      - name: Create ZIP for release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          cd dist
+          zip -r "OP-Z-Sample-Manager-macOS.zip" "OP-Z Sample Manager.app"
 
       - name: Upload Release Asset
         if: startsWith(github.ref, 'refs/tags/')
@@ -67,16 +87,17 @@ jobs:
       - name: Build with PyInstaller
         run: pyinstaller opz-sample-manager.spec
 
-      - name: Create ZIP archive
-        run: |
-          cd dist
-          Compress-Archive -Path "OP-Z Sample Manager" -DestinationPath "OP-Z-Sample-Manager-Windows.zip"
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: OP-Z-Sample-Manager-Windows
-          path: dist/OP-Z-Sample-Manager-Windows.zip
+          path: dist/OP-Z Sample Manager
+
+      - name: Create ZIP for release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          cd dist
+          Compress-Archive -Path "OP-Z Sample Manager" -DestinationPath "OP-Z-Sample-Manager-Windows.zip"
 
       - name: Upload Release Asset
         if: startsWith(github.ref, 'refs/tags/')
