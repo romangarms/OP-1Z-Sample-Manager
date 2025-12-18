@@ -39,23 +39,17 @@ jobs:
         run: |
           # Remove COLLECT folder, keep only .app
           rm -rf "dist/OP-Z Sample Manager"
-          # Show what we're uploading
-          echo "=== Final dist/ contents ==="
-          du -sh dist/*
+          # Create zip with ditto (preserves symlinks, prevents 3x size bloat)
+          cd dist
+          ditto -c -k --sequesterRsrc "OP-Z Sample Manager.app" "OP-Z-Sample-Manager-macOS.zip"
+          echo "=== Final sizes ==="
+          du -sh *
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: OP-Z-Sample-Manager-macOS
-          path: dist/OP-Z Sample Manager.app
-
-      - name: Create ZIP for release
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          cd dist
-          zip -r "OP-Z-Sample-Manager-macOS.zip" "OP-Z Sample Manager.app"
-          echo "=== ZIP size ==="
-          du -sh *.zip
+          path: dist/OP-Z-Sample-Manager-macOS.zip
 
       - name: Upload Release Asset
         if: startsWith(github.ref, 'refs/tags/')
