@@ -13,6 +13,88 @@ const OP1_DRUM_LIMIT = 42;
 const OP1_SYNTH_LIMIT = 42;
 const OP1_PATCH_LIMIT = 100;
 
+// Audio preview
+let audioPlayer = null;
+let currentlyPlayingPath = null;
+let currentlyPlayingElement = null;
+
+// ============================================
+// Loading State Management
+// ============================================
+
+function showLoading(device) {
+    const overlay = document.getElementById(`${device}-loading-overlay`);
+    if (overlay) {
+        overlay.hidden = false;
+    }
+}
+
+function hideLoading(device) {
+    const overlay = document.getElementById(`${device}-loading-overlay`);
+    if (overlay) {
+        overlay.hidden = true;
+    }
+}
+
+// ============================================
+// Audio Preview Functions
+// ============================================
+
+function initAudioPlayer() {
+    if (!audioPlayer) {
+        audioPlayer = new Audio();
+        audioPlayer.addEventListener('ended', () => {
+            clearPlayingState();
+        });
+        audioPlayer.addEventListener('error', (e) => {
+            console.error('Audio playback error:', e);
+            clearPlayingState();
+            toast.error('Could not play sample');
+        });
+    }
+}
+
+function clearPlayingState() {
+    if (currentlyPlayingElement) {
+        currentlyPlayingElement.classList.remove('playing');
+    }
+    currentlyPlayingPath = null;
+    currentlyPlayingElement = null;
+}
+
+function stopPlayback() {
+    if (audioPlayer) {
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+    }
+    clearPlayingState();
+}
+
+function playSample(path, element) {
+    initAudioPlayer();
+
+    // If clicking the same sample that's playing, stop it
+    if (currentlyPlayingPath === path) {
+        stopPlayback();
+        return;
+    }
+
+    // Stop any current playback
+    stopPlayback();
+
+    // Start new playback
+    currentlyPlayingPath = path;
+    currentlyPlayingElement = element;
+    element.classList.add('playing');
+
+    audioPlayer.src = `/preview-sample?path=${encodeURIComponent(path)}`;
+    audioPlayer.play().catch(err => {
+        console.error('Failed to play sample:', err);
+        clearPlayingState();
+        toast.error('Could not play sample');
+    });
+}
+
 // ============================================
 // Device Tab Management
 // ============================================
@@ -41,8 +123,17 @@ async function initDeviceTabs() {
     switchDevice(currentDevice);
 }
 
-async function switchDevice(device) {
+function switchDevice(device) {
     currentDevice = device;
+
+    // Hide any validation error from previous device
+    const errorContainer = document.getElementById("validation-error-container");
+    if (errorContainer) {
+        errorContainer.hidden = true;
+    }
+
+    // Stop any playing audio
+    stopPlayback();
 
     // Update tab active states
     document.querySelectorAll('.device-tab').forEach(tab => {
@@ -56,23 +147,19 @@ async function switchDevice(device) {
     if (device === 'opz') {
         opzContainer.hidden = false;
         op1Container.hidden = true;
-        await fetchOpzSamples();
+        fetchOpzSamples();  // Fire and forget - don't block UI
     } else {
         opzContainer.hidden = true;
         op1Container.hidden = false;
-        await fetchOp1Samples();
+        fetchOp1Samples();  // Fire and forget - don't block UI
     }
 
-    // Save device selection to config
-    try {
-        await fetch('/set-config-setting', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ config_option: 'SELECTED_DEVICE', config_value: device })
-        });
-    } catch (err) {
-        console.error('Failed to save device setting:', err);
-    }
+    // Save device selection to config (fire and forget)
+    fetch('/set-config-setting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config_option: 'SELECTED_DEVICE', config_value: device })
+    }).catch(err => console.error('Failed to save device setting:', err));
 }
 
 async function openDirectory() {
@@ -205,6 +292,7 @@ function deleteSample(device, path, refreshCallback) {
 // ============================================
 
 async function fetchOpzSamples() {
+    showLoading('opz');
     try {
         const response = await fetch("/read-samples");
         if (!response.ok) {
@@ -325,6 +413,15 @@ async function fetchOpzSamples() {
                     await deleteSample('opz', samplePath, fetchOpzSamples);
                 };
 
+                // Add click handler for audio preview (only if slot has a sample)
+                if (slot.path) {
+                    slotDiv.addEventListener('click', (e) => {
+                        // Don't play if clicking delete button
+                        if (e.target.closest('.delete-btn')) return;
+                        playSample(slot.path, slotDiv);
+                    });
+                }
+
                 slotDiv.appendChild(text);
                 slotDiv.appendChild(deleteBtn);
                 container.appendChild(slotDiv);
@@ -333,6 +430,8 @@ async function fetchOpzSamples() {
 
     } catch (error) {
         console.error("Failed to fetch OP-Z samples:", error);
+    } finally {
+        hideLoading('opz');
     }
 }
 
@@ -342,6 +441,7 @@ async function fetchOpzSamples() {
 // ============================================
 
 async function fetchOp1Samples() {
+    showLoading('op1');
     try {
         const response = await fetch("/read-op1-samples");
         if (!response.ok) {
@@ -377,6 +477,8 @@ async function fetchOp1Samples() {
 
     } catch (error) {
         console.error("Failed to fetch OP-1 samples:", error);
+    } finally {
+        hideLoading('op1');
     }
 }
 
@@ -468,6 +570,13 @@ function renderOp1Section(parentFolder, subdirectories) {
                     <span class="sample-type-badge ${badgeClass}">${badgeText}</span>
                     ${!isReadOnly ? `<button class="delete-btn" onclick="deleteSample('op1', '${escapeHtml(file.path)}', fetchOp1Samples)">✕</button>` : ''}
                 `;
+
+                // Add click handler for audio preview
+                fileDiv.addEventListener('click', (e) => {
+                    // Don't play if clicking delete button
+                    if (e.target.closest('.delete-btn')) return;
+                    playSample(file.path, fileDiv);
+                });
 
                 content.appendChild(fileDiv);
             });
