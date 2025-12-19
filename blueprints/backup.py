@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app, send_file
-from .config import get_config_setting, read_json_from_path, write_json_to_path
+from .config import get_config_setting, get_device_mount_path, read_json_from_path, write_json_to_path
 from .utils import (
     TAPE_TRACK_IDS,
     TAPE_DIR,
@@ -28,15 +28,6 @@ os.makedirs(BACKUP_AUDIO_CACHE_DIR, exist_ok=True)
 
 # Files/directories to ignore during backup
 IGNORE_PATTERNS = ['.DS_Store', '.Spotlight-V100', '.Trashes', '._*']
-
-
-def get_device_mount_path(device):
-    """Get mount path for the specified device."""
-    if device == "op1":
-        return get_config_setting("OP1_MOUNT_PATH")
-    elif device == "opz":
-        return get_config_setting("OPZ_MOUNT_PATH")
-    return None
 
 
 def get_backups_base_path(device):

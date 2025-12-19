@@ -116,11 +116,41 @@ def get_config_setting(key, default=None):
             return "opz"  # Default to OP-Z
         return value
 
+    # Special case: DEVELOPER_MODE defaults to False
+    if key == "DEVELOPER_MODE":
+        value = app_config.get(key)
+        if value is None:
+            return False
+        return value
+
     value = app_config.get(key, default)
     # If the value exists but is an empty string, use the default
     if value == "" and default is not None:
         return default
     return value
+
+
+def get_device_mount_path(device):
+    """
+    Get the effective mount path for a device.
+
+    In developer mode, returns the manually configured path.
+    Otherwise, returns the auto-detected path.
+
+    Args:
+        device: "opz" or "op1"
+
+    Returns:
+        Mount path string or empty string if not set
+    """
+    if get_config_setting("DEVELOPER_MODE", False):
+        # Use manual path in developer mode
+        key = "OPZ_MOUNT_PATH" if device == "opz" else "OP1_MOUNT_PATH"
+    else:
+        # Use auto-detected path in normal mode
+        key = "OPZ_DETECTED_PATH" if device == "opz" else "OP1_DETECTED_PATH"
+
+    return get_config_setting(key, "")
 
 # Set a config setting and with option to not save it
 def set_config_setting(key, value, save=True):

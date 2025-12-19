@@ -11,62 +11,39 @@
 {% block main %}
 <h1>Teenage Engineering Sample Utility</h1>
 
-<script>
-    // Check if any devices (OP-Z or OP-1) are configured
-    async function checkDevicePaths() {
-        try {
-            const [opzRes, op1Res] = await Promise.all([
-                fetch('/get-config-setting?config_option=OPZ_MOUNT_PATH').then(r => r.json()),
-                fetch('/get-config-setting?config_option=OP1_MOUNT_PATH').then(r => r.json())
-            ]);
+<div class="home-layout">
+    <!-- Device Status Sidebar -->
+    <aside class="device-sidebar">
+        <h3 class="sidebar-title">DEVICES</h3>
 
-            const opzSet = opzRes.config_value && opzRes.config_value !== '';
-            const op1Set = op1Res.config_value && op1Res.config_value !== '';
+        <!-- OP-Z Status Card -->
+        <div class="device-card" id="opz-status-card" onclick="deviceStatus.openDeviceDirectory('opz')">
+            <div class="device-header">
+                <span class="status-indicator disconnected" id="opz-indicator"></span>
+                <span class="device-name">OP-Z</span>
+            </div>
+            <div class="device-info">
+                <span class="device-status" id="opz-status-text">Not connected</span>
+                <span class="device-path" id="opz-path-text"></span>
+            </div>
+        </div>
 
-            if (opzSet || op1Set) {
-                document.getElementById('mount-path-container').hidden = true;
-            } else {
-                // Show info container with neutral styling and yellow icon
-                const container = document.getElementById('mount-path-container');
-                container.hidden = false;
-                container.classList.remove('error-container');
-                container.classList.add('info-container');
-                document.getElementById('mount-path').innerHTML =
-                    'No devices configured. <a href="/utilitysettings" class="info-link">Configure in Utility Settings</a>';
-                // Re-render Lucide icons for the newly visible container
-                lucide.createIcons();
-            }
-        } catch (error) {
-            console.error('Error checking device paths:', error);
-            document.getElementById('mount-path').innerText = 'Error checking device configuration.';
-        }
-    }
+        <!-- OP-1 Status Card -->
+        <div class="device-card" id="op1-status-card" onclick="deviceStatus.openDeviceDirectory('op1')">
+            <div class="device-header">
+                <span class="status-indicator disconnected" id="op1-indicator"></span>
+                <span class="device-name">OP-1</span>
+            </div>
+            <div class="device-info">
+                <span class="device-status" id="op1-status-text">Not connected</span>
+                <span class="device-path" id="op1-path-text"></span>
+            </div>
+        </div>
+    </aside>
 
-    // Run on page load
-    checkDevicePaths();
-
-    // Run when window regains focus
-    window.addEventListener('focus', checkDevicePaths);
-
-    // Initialize Lucide icons
-    document.addEventListener('DOMContentLoaded', () => {
-        lucide.createIcons();
-    });
-
-    // Function to open external links in system browser
-    function openExternalLink(url) {
-        fetch(`/open-external-link?url=${encodeURIComponent(url)}`)
-            .then(response => response.json())
-            .catch(err => console.error('Error opening link:', err));
-    }
-</script>
-
-<div id="mount-path-container" class="error-container container" hidden>
-    <span id="mount-path-icon" class="info-icon"><i data-lucide="alert-circle"></i></span>
-    <p id="mount-path"></p>
-</div>
-
-<div class="tile-grid">
+    <!-- Main Content -->
+    <main class="home-main">
+        <div class="tile-grid">
     <!-- Row 1: Universal tools -->
     <a href="/sampleconverter" class="nav-tile tile-primary">
         <i data-lucide="audio-waveform"></i>
@@ -103,6 +80,8 @@
         <p>Backup samples and projects</p>
         <span class="device-badge">OP-1 & OP-Z</span>
     </a>
+        </div>
+    </main>
 </div>
 
 <div class="footer-links">
@@ -117,6 +96,5 @@
     </button>
 </div>
 
+<script src="/static/js/homepage.js"></script>
 {% endblock %}
-
-</html>

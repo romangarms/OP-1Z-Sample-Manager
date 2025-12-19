@@ -9,7 +9,7 @@ import subprocess
 import shutil
 import tempfile
 from flask import Blueprint, request, jsonify, current_app, send_file
-from .config import get_config_setting
+from .config import get_config_setting, get_device_mount_path
 from .utils import (
     TAPE_TRACK_IDS,
     ALBUM_SIDE_IDS,
@@ -33,7 +33,7 @@ os.makedirs(AUDIO_CACHE_DIR, exist_ok=True)
 
 def get_op1_mount_path():
     """Get and validate OP-1 mount path."""
-    path = get_config_setting("OP1_MOUNT_PATH")
+    path = get_device_mount_path("op1")
     if not path or not os.path.exists(path):
         return None
     return path

@@ -156,6 +156,71 @@ async function loadLoggerLevel() {
   updateInputWidth(select);
 }
 
+/**
+ * Toggle developer mode on/off
+ */
+function toggleDeveloperMode() {
+  const toggle = document.getElementById("developer-mode-toggle");
+  const isEnabled = toggle.checked;
+
+  // Save to config
+  fetch("/set-config-setting", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      config_option: "DEVELOPER_MODE",
+      config_value: isEnabled
+    })
+  })
+    .then(res => {
+      if (res.ok) {
+        updateManualPathsVisibility(isEnabled);
+        toast.success(
+          isEnabled ? "Manual device paths enabled" : "Auto-detection enabled",
+          "Developer Mode " + (isEnabled ? "Enabled" : "Disabled")
+        );
+      } else {
+        toast.error("Failed to save setting");
+        toggle.checked = !isEnabled; // Revert
+      }
+    })
+    .catch(err => {
+      console.error("Error toggling developer mode:", err);
+      toast.error("Error saving setting");
+      toggle.checked = !isEnabled; // Revert
+    });
+}
+
+/**
+ * Load developer mode setting and update UI
+ */
+async function loadDeveloperMode() {
+  try {
+    const res = await fetch("/get-config-setting?config_option=DEVELOPER_MODE");
+    const data = await res.json();
+    const isEnabled = data.config_value === true;
+
+    const toggle = document.getElementById("developer-mode-toggle");
+    if (toggle) {
+      toggle.checked = isEnabled;
+    }
+
+    updateManualPathsVisibility(isEnabled);
+  } catch (err) {
+    console.error("Error loading developer mode:", err);
+  }
+}
+
+/**
+ * Show/hide manual paths container based on developer mode
+ */
+function updateManualPathsVisibility(isEnabled) {
+  const container = document.getElementById("manual-paths-container");
+  if (container) {
+    container.style.display = isEnabled ? "block" : "none";
+  }
+}
+
 
 window.onload = function () {
   loadConfigPath("FFMPEG_PATH", "ffmpeg-path-holder");
@@ -163,6 +228,7 @@ window.onload = function () {
   loadConfigPath("OP1_MOUNT_PATH", "op1-path-holder");
   loadConfigPath("WORKING_DIRECTORY", "working-dir-holder");
   loadLoggerLevel();
+  loadDeveloperMode();
 
   // only show ffmpeg settings if the OS is Windows
   (async function () {

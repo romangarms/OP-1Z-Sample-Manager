@@ -2,6 +2,116 @@ h1 {
     text-align: center;
 }
 
+/* Home page layout with sidebar */
+.home-layout {
+    display: flex;
+    gap: 30px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Device Status Sidebar */
+.device-sidebar {
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.sidebar-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--neutral-gray);
+    margin-bottom: 15px;
+    padding-left: 5px;
+}
+
+.device-card {
+    background-color: var(--background-color);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.device-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.device-card.disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.device-card.disabled:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.device-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-indicator.connected {
+    background-color: var(--first-color);
+    box-shadow: 0 0 6px var(--first-color);
+}
+
+.status-indicator.disconnected {
+    background-color: var(--neutral-gray);
+}
+
+.device-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.device-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: 20px;
+}
+
+.device-status {
+    font-size: 0.8rem;
+    color: var(--text-color);
+}
+
+.device-path {
+    font-size: 0.7rem;
+    color: var(--text-color);
+    opacity: 0.85;
+    word-break: break-all;
+    max-width: 160px;
+}
+
+.device-path.mode-hint {
+    font-style: italic;
+    opacity: 1;
+    color: var(--text-color);
+}
+
+/* Main content area */
+.home-main {
+    flex: 1;
+    min-width: 0;
+}
+
 .tile-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -164,6 +274,29 @@ h1 {
     background-color: var(--neutral-gray);
 }
 
+@media (max-width: 900px) {
+    .home-layout {
+        flex-direction: column;
+        padding: 0 15px;
+    }
+
+    .device-sidebar {
+        width: 100%;
+        display: flex;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-title {
+        display: none;
+    }
+
+    .device-card {
+        flex: 1;
+        margin-bottom: 0;
+    }
+}
+
 @media (max-width: 768px) {
     .tile-grid {
         grid-template-columns: 1fr;
@@ -174,5 +307,15 @@ h1 {
 
     .tile-split {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .device-sidebar {
+        flex-direction: column;
+    }
+
+    .device-card {
+        flex: none;
     }
 }

@@ -5,7 +5,7 @@ import html
 import werkzeug.utils
 import shutil
 from flask import Blueprint, request, jsonify, current_app, send_file
-from .config import get_config_setting
+from .config import get_config_setting, get_device_mount_path
 from .sample_converter import convert_audio_file, UPLOAD_FOLDER
 from .utils import get_unique_filepath
 
@@ -66,8 +66,8 @@ def get_device_config(device=None):
     if device is None:
         device = get_config_setting("SELECTED_DEVICE")
     if device == "op1":
-        return get_config_setting("OP1_MOUNT_PATH"), "OP-1"
-    return get_config_setting("OPZ_MOUNT_PATH"), "OP-Z"
+        return get_device_mount_path("op1"), "OP-1"
+    return get_device_mount_path("opz"), "OP-Z"
 
 
 def sanitize_and_validate_path(allowed_base, *path_components):

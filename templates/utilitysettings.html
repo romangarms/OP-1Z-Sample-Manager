@@ -30,25 +30,46 @@
 <hr>
 </div>
 
-<!-- OP-Z Path -->
-<div>Set the path to the mounted OP-Z</div>
-<input id="opz-path-holder" placeholder="OP-Z mount path goes here" style="min-width: 200px;"
-       onblur="setConfigPath('OPZ_MOUNT_PATH', 'opz-path-holder', 'opz-info')" />
-<button onclick="openPathPicker('/get-user-folder-path', 'opz-path-holder', 'opz-info', 'OPZ_MOUNT_PATH', true)" class="btn btn-warning">
-  Open Folder Browser
-</button>
-<p id="opz-info"></p>
+<!-- Device Detection Mode -->
+<div class="settings-section">
+    <div class="auto-detect-info">
+        <p><strong>Device Detection:</strong> Devices are automatically detected when connected via USB.</p>
+    </div>
 
-<hr>
+    <div class="developer-mode-toggle">
+        <label class="toggle-switch">
+            <input type="checkbox" id="developer-mode-toggle" onchange="toggleDeveloperMode()">
+            <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">Developer Mode (Manual Device Paths)</span>
+    </div>
+    <p class="toggle-description">Enable to manually set device paths for testing without physical devices.</p>
+</div>
 
-<!-- OP-1 Path -->
-<div>Set the path to the mounted OP-1</div>
-<input id="op1-path-holder" placeholder="OP-1 mount path goes here" style="min-width: 200px;"
-       onblur="setConfigPath('OP1_MOUNT_PATH', 'op1-path-holder', 'op1-info')" />
-<button onclick="openPathPicker('/get-user-folder-path', 'op1-path-holder', 'op1-info', 'OP1_MOUNT_PATH', true)" class="btn btn-warning">
-  Open Folder Browser
-</button>
-<p id="op1-info"></p>
+<!-- Manual Device Paths (hidden by default, shown in developer mode) -->
+<div id="manual-paths-container" style="display: none;">
+    <hr>
+
+    <!-- OP-Z Path -->
+    <div>Set the path to the mounted OP-Z</div>
+    <input id="opz-path-holder" placeholder="OP-Z mount path goes here" style="min-width: 200px;"
+           onblur="setConfigPath('OPZ_MOUNT_PATH', 'opz-path-holder', 'opz-info')" />
+    <button onclick="openPathPicker('/get-user-folder-path', 'opz-path-holder', 'opz-info', 'OPZ_MOUNT_PATH', true)" class="btn btn-warning">
+      Open Folder Browser
+    </button>
+    <p id="opz-info"></p>
+
+    <hr>
+
+    <!-- OP-1 Path -->
+    <div>Set the path to the mounted OP-1</div>
+    <input id="op1-path-holder" placeholder="OP-1 mount path goes here" style="min-width: 200px;"
+           onblur="setConfigPath('OP1_MOUNT_PATH', 'op1-path-holder', 'op1-info')" />
+    <button onclick="openPathPicker('/get-user-folder-path', 'op1-path-holder', 'op1-info', 'OP1_MOUNT_PATH', true)" class="btn btn-warning">
+      Open Folder Browser
+    </button>
+    <p id="op1-info"></p>
+</div>
 
 <hr>
 
