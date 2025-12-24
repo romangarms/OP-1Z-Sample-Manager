@@ -10,10 +10,8 @@ This is a Flask app built with PyQt5 to handle everything with samples on the OP
 2) ```python main.py``` **or** build app by running ```./build.sh```, and run the created executable under ```dist/```
 
 ### Using the App:
-- Set your directories in utility settings:
-    - Set your working directory (This is where backups, converted samples, and more are stored)
-    - Set your OP-Z mount path (if connected)
-    - Set your OP-1 mount path (if connected)
+- Double check that all paths are set correctly in Utility Settings
+- Connect your device in disk mode and begin managing your samples, tapes, projects, and more!
 
 ## Screenshots
 ### Home Page:
