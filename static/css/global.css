@@ -146,6 +146,7 @@ html, body {
 
 h1 {
     line-height: 2;
+    text-align: center;
 }
 
 h3 {
@@ -359,4 +360,103 @@ h3 {
     .toast {
         min-width: auto;
     }
+}
+
+/* ===========================================
+   Section Headers
+   =========================================== */
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--offwhite);
+}
+
+.section-header h2 {
+    margin: 0;
+    color: var(--text-color);
+}
+
+/* ===========================================
+   Loading Overlay & Spinner
+   =========================================== */
+
+/* Spinner animation */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Loading spinner (CSS-based) */
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--offwhite);
+    border-top-color: var(--second-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Loading overlay - base styles */
+.loading-overlay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.loading-overlay.hidden,
+.loading-overlay[hidden] {
+    display: none;
+}
+
+/* Loading content (for overlays with icon/text/progress) */
+.loading-content {
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+.loading-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 15px;
+    color: var(--second-color);
+}
+
+.loading-content h3 {
+    margin: 0 0 10px 0;
+    color: var(--text-color);
+}
+
+.loading-content p {
+    margin: 0 0 20px 0;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+/* ===========================================
+   Progress Bar
+   =========================================== */
+
+.progress-container {
+    background-color: var(--offwhite);
+    border-radius: 10px;
+    height: 20px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: var(--first-color);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
 }

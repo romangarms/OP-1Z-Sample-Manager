@@ -544,13 +544,6 @@ function setTrackVolume(trackId, value) {
 // Time Display
 // ===========================================
 
-function formatTime(seconds) {
-    if (!seconds || isNaN(seconds)) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
 function updateTapeTimeDisplay(current, total) {
     document.getElementById('tape-current-time').textContent = formatTime(current);
     document.getElementById('tape-total-time').textContent = formatTime(total);
@@ -567,25 +560,6 @@ function updateAlbumTimeDisplay(sideId, current, total) {
 // ===========================================
 // Export Functions
 // ===========================================
-
-/**
- * Run an async function with button loading state
- * Shows spinner while running, restores original content when done
- */
-async function withButtonLoading(btn, loadingText, asyncFn) {
-    btn.disabled = true;
-    const originalHtml = btn.innerHTML;
-    btn.innerHTML = `<i data-lucide="loader-2" class="spin"></i> ${loadingText}`;
-    lucide.createIcons();
-
-    try {
-        await asyncFn();
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
-        lucide.createIcons();
-    }
-}
 
 function setupExportButtons() {
     document.getElementById('export-tape').addEventListener('click', exportTapeTracks);

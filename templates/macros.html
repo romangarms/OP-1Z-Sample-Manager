@@ -22,3 +22,41 @@
     {{ sample_category_box(id2, title2) }}
 </div>
 {% endmacro %}
+
+{# Macro for error container #}
+{% macro error_container(id='validation-error', message_id=none) %}
+{% set msg_id = message_id or (id ~ '-message') %}
+<div id="{{ id }}-container" class="error-container" hidden>
+    <p id="{{ msg_id }}"></p>
+</div>
+{% endmacro %}
+
+{# Macro for device tabs (OP-Z / OP-1 switcher) #}
+{% macro device_tabs(active='opz') %}
+<div class="device-tabs">
+    <button class="device-tab {{ 'active' if active == 'opz' else '' }}" data-device="opz">OP-Z</button>
+    <button class="device-tab {{ 'active' if active == 'op1' else '' }}" data-device="op1">OP-1</button>
+</div>
+{% endmacro %}
+
+{# Macro for simple loading overlay with spinner #}
+{% macro loading_overlay(id='loading', message='Loading...') %}
+<div id="{{ id }}-overlay" class="loading-overlay" hidden>
+    <div class="loading-spinner"></div>
+    <span>{{ message }}</span>
+</div>
+{% endmacro %}
+
+{# Macro for loading overlay with icon and progress bar #}
+{% macro loading_overlay_progress(id='loading', title='Processing...', message='Please wait...') %}
+<div id="{{ id }}-overlay" class="loading-overlay hidden">
+    <div class="loading-content samplepackbox">
+        <i data-lucide="loader-2" class="spin loading-icon"></i>
+        <h3 id="{{ id }}-title">{{ title }}</h3>
+        <p id="{{ id }}-status">{{ message }}</p>
+        <div class="progress-container">
+            <div class="progress-bar" id="{{ id }}-progress"></div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

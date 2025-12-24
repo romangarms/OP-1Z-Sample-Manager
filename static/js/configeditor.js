@@ -122,17 +122,6 @@ function initTabs() {
 // General Config
 // ===========================================
 
-async function loadGeneralConfig() {
-    try {
-        const res = await fetch('/get-config/general');
-        generalConfig = await res.json();
-        renderGeneralForm(generalConfig);
-    } catch (err) {
-        console.error('Error loading general config:', err);
-        toast.error('Failed to load general settings');
-    }
-}
-
 function renderGeneralForm(config) {
     const form = document.getElementById('general-form');
     form.innerHTML = '';
@@ -457,31 +446,48 @@ async function saveDmxConfig() {
 // Initialization
 // ===========================================
 
+function showError() {
+    document.getElementById('device-error-container').hidden = false;
+    document.getElementById('main-content').hidden = true;
+}
+
+function hideError() {
+    document.getElementById('device-error-container').hidden = true;
+    document.getElementById('main-content').hidden = false;
+}
+
 async function loadAllConfigs() {
-    await Promise.all([
-        loadGeneralConfig(),
-        loadMidiConfig(),
-        loadDmxConfig()
-    ]);
+    try {
+        const res = await fetch('/get-config/general');
+        if (!res.ok) {
+            showError();
+            return false;
+        }
+        generalConfig = await res.json();
+        renderGeneralForm(generalConfig);
+
+        // Load remaining configs
+        await Promise.all([
+            loadMidiConfig(),
+            loadDmxConfig()
+        ]);
+
+        hideError();
+        return true;
+    } catch (err) {
+        console.error('Failed to load configs:', err);
+        showError();
+        return false;
+    }
 }
 
 async function pollForMount(retries = 60, delay = 2000) {
     for (let i = 0; i < retries; i++) {
-        try {
-            const res = await fetch('/get-config-setting?config_option=OPZ_MOUNT_PATH');
-            const data = await res.json();
-
-            if (data.config_value) {
-                await loadAllConfigs();
-                return;
-            }
-        } catch (err) {
-            console.error('Failed to check mount path:', err);
-        }
+        const success = await loadAllConfigs();
+        if (success) return;
         await new Promise(r => setTimeout(r, delay));
     }
-
-    console.warn('Mount path not found after polling.');
+    console.warn('OP-Z not found after polling.');
 }
 
 // Initialize on page load

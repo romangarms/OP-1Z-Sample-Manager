@@ -813,16 +813,6 @@ function deleteOp1Subdirectory(path) {
 }
 
 // ============================================
-// Utility Functions
-// ============================================
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// ============================================
 // OP-Z Drag and Drop Setup
 // ============================================
 

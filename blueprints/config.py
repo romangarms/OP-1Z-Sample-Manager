@@ -228,19 +228,19 @@ def reset_config_flask():
 # Flask routes to edit config files on the OP-Z device
 @config_bp.route('/get-config/general')
 def get_general_config():
-    OPZ_MOUNT_PATH = get_config_setting("OPZ_MOUNT_PATH")
+    OPZ_MOUNT_PATH = get_device_mount_path("opz")
     general_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'general.json')
     return jsonify(read_json_from_path(general_json_path))
 
 @config_bp.route('/get-config/midi')
 def get_midi_config():
-    OPZ_MOUNT_PATH = get_config_setting("OPZ_MOUNT_PATH")
+    OPZ_MOUNT_PATH = get_device_mount_path("opz")
     midi_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'midi.json')
     return jsonify(read_json_from_path(midi_json_path))
 
 @config_bp.route('/save-config/general', methods=['POST'])
 def save_general_config():
-    OPZ_MOUNT_PATH = get_config_setting("OPZ_MOUNT_PATH")
+    OPZ_MOUNT_PATH = get_device_mount_path("opz")
     general_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'general.json')
     data = request.get_json()
     write_json_to_path(general_json_path, data)
@@ -248,7 +248,7 @@ def save_general_config():
 
 @config_bp.route('/save-config/midi', methods=['POST'])
 def save_midi_config():
-    OPZ_MOUNT_PATH = get_config_setting("OPZ_MOUNT_PATH")
+    OPZ_MOUNT_PATH = get_device_mount_path("opz")
     midi_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'midi.json')
     data = request.get_json()
     write_json_to_path(midi_json_path, data)
@@ -256,7 +256,7 @@ def save_midi_config():
 
 @config_bp.route('/get-config/dmx')
 def get_dmx_config():
-    OPZ_MOUNT_PATH = get_config_setting("OPZ_MOUNT_PATH")
+    OPZ_MOUNT_PATH = get_device_mount_path("opz")
     dmx_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'dmx.json')
     if not os.path.exists(dmx_json_path):
         return jsonify({"error": "dmx.json not found"}), 404
@@ -266,7 +266,7 @@ def get_dmx_config():
 
 @config_bp.route('/save-config/dmx', methods=['POST'])
 def save_dmx_config():
-    OPZ_MOUNT_PATH = get_config_setting("OPZ_MOUNT_PATH")
+    OPZ_MOUNT_PATH = get_device_mount_path("opz")
     dmx_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'dmx.json')
     data = request.get_json()
     content = data.get('content', '')

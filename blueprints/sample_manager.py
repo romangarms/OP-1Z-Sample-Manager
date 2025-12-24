@@ -249,7 +249,7 @@ def validate_device_folder_structure(device, mount_path):
 
 @sample_manager_bp.route("/read-samples")
 def read_opz():
-    OPZ_MOUNT_PATH = get_config_setting("OPZ_MOUNT_PATH")
+    OPZ_MOUNT_PATH = get_device_mount_path("opz")
     current_app.logger.info(f"Reading samples from: {OPZ_MOUNT_PATH}")
 
     # Validate the OP-Z folder structure
@@ -455,7 +455,7 @@ def move_sample():
     if not source_path or not target_category or target_slot is None:
         return {"error": "Missing required fields"}, 400
 
-    OPZ_MOUNT_PATH = get_config_setting("OPZ_MOUNT_PATH")
+    OPZ_MOUNT_PATH = get_device_mount_path("opz")
     samplepacks_base = os.path.join(OPZ_MOUNT_PATH, "samplepacks")
 
     # Validate source path is within samplepacks (full path from frontend)
@@ -510,10 +510,10 @@ def open_device_directory():
     device = request.args.get("device", "opz")
 
     if device == "op1":
-        mount_path = get_config_setting("OP1_MOUNT_PATH")
+        mount_path = get_device_mount_path("op1")
         device_name = "OP-1"
     else:
-        mount_path = get_config_setting("OPZ_MOUNT_PATH")
+        mount_path = get_device_mount_path("opz")
         device_name = "OP-Z"
 
     if not mount_path or not os.path.exists(mount_path):
@@ -674,7 +674,7 @@ def get_op1_counts(op1_mount_path):
 @sample_manager_bp.route("/read-op1-samples")
 def read_op1():
     """Read all samples and patches from OP-1 directory structure."""
-    OP1_MOUNT_PATH = get_config_setting("OP1_MOUNT_PATH")
+    OP1_MOUNT_PATH = get_device_mount_path("op1")
     current_app.logger.info(f"Reading OP-1 samples from: {OP1_MOUNT_PATH}")
 
     # Validate the OP-1 folder structure
@@ -750,7 +750,7 @@ def upload_op1_folder():
     if folder_name == "user":
         return {"error": "Cannot use 'user' as folder name"}, 400
 
-    OP1_MOUNT_PATH = get_config_setting("OP1_MOUNT_PATH")
+    OP1_MOUNT_PATH = get_device_mount_path("op1")
 
     is_valid, error_message = validate_device_folder_structure("op1", OP1_MOUNT_PATH)
     if not is_valid:
@@ -836,7 +836,7 @@ def create_op1_subdirectory():
     if name == "user":
         return {"error": "Cannot use 'user' as folder name"}, 400
 
-    OP1_MOUNT_PATH = get_config_setting("OP1_MOUNT_PATH")
+    OP1_MOUNT_PATH = get_device_mount_path("op1")
 
     is_valid, error_message = validate_device_folder_structure("op1", OP1_MOUNT_PATH)
     if not is_valid:
@@ -882,7 +882,7 @@ def rename_op1_subdirectory():
     if new_name == "user":
         return {"error": "Cannot use 'user' as folder name"}, 400
 
-    OP1_MOUNT_PATH = get_config_setting("OP1_MOUNT_PATH")
+    OP1_MOUNT_PATH = get_device_mount_path("op1")
 
     # Sanitize and validate both paths (prevents path traversal and dangerous characters)
     is_valid, safe_old_path, error = sanitize_and_validate_path(OP1_MOUNT_PATH, parent, old_name)
@@ -926,7 +926,7 @@ def delete_op1_subdirectory():
     if name == "user":
         return {"error": "Cannot delete 'user' directory"}, 403
 
-    OP1_MOUNT_PATH = get_config_setting("OP1_MOUNT_PATH")
+    OP1_MOUNT_PATH = get_device_mount_path("op1")
 
     # Sanitize and validate path (prevents path traversal and dangerous characters)
     is_valid, safe_path, error = sanitize_and_validate_path(OP1_MOUNT_PATH, parent, name)
@@ -959,8 +959,8 @@ def preview_sample():
         return {"error": "Missing path parameter"}, 400
 
     # Get both device mount paths
-    opz_mount = get_config_setting("OPZ_MOUNT_PATH")
-    op1_mount = get_config_setting("OP1_MOUNT_PATH")
+    opz_mount = get_device_mount_path("opz")
+    op1_mount = get_device_mount_path("op1")
 
     # Validate path is within one of the device mount directories
     allowed_base = None
