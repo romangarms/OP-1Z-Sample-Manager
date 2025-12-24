@@ -2,29 +2,20 @@ h1 {
     text-align: center;
 }
 
+/* Tab Content */
+.tab-content {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 #config-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
     margin: 30px auto;
-    max-width: 1400px;
-}
-
-.config-row {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.config-section-wrapper {
-    flex: 1;
-    min-width: 300px;
-    margin: 0 10px;
-}
-
-.config-section-wrapper.full-width {
-    flex: none;
-    width: calc(100% - 20px);
+    max-width: 900px;
+    padding: 0 20px;
 }
 
 .config-section {
@@ -46,39 +37,24 @@ h1 {
     background-color: var(--offwhite);
     border-radius: 5px;
     padding: 20px;
-    max-height: 500px;
-    overflow-y: auto;
 }
 
-.config-item {
+/* General tab - simple vertical list */
+#general-form .config-item {
     background-color: white;
-    margin-bottom: 15px;
-    padding: 15px;
+    margin-bottom: 10px;
+    padding: 12px 15px;
     border-radius: 5px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.config-label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 8px;
-    color: var(--text-color);
-}
-
-.config-number-input {
-    width: 70px;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin: 2px;
-    font-family: monospace;
-}
-
-.config-array {
-    margin-top: 8px;
     display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#general-form .config-label {
+    margin-bottom: 0;
+    font-weight: 500;
+    color: var(--text-color);
 }
 
 .toggle-checkbox {
@@ -87,25 +63,261 @@ h1 {
     cursor: pointer;
 }
 
+/* MIDI Global Settings */
+.midi-global-section {
+    margin-bottom: 20px;
+}
+
+.midi-global-section .config-form-inner {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.midi-global-section .config-item {
+    background-color: white;
+    padding: 12px 15px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.midi-global-section .config-label {
+    margin-bottom: 0;
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+/* Track Accordions */
+.track-accordions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.track-accordion {
+    background-color: var(--offwhite);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.track-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background-color: white;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.track-accordion-header:hover {
+    background-color: #f5f5f5;
+}
+
+.track-accordion-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.track-number {
+    background-color: var(--second-color);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.track-name {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.track-accordion-arrow {
+    transition: transform 0.2s;
+    color: var(--neutral-gray);
+}
+
+.track-accordion.expanded .track-accordion-arrow {
+    transform: rotate(180deg);
+}
+
+.track-accordion-content {
+    display: none;
+    padding: 16px;
+    background-color: white;
+    border-top: 1px solid #eee;
+}
+
+.track-accordion.expanded .track-accordion-content {
+    display: block;
+}
+
+/* Track Settings Row (Enable + Channel) */
+.track-settings-row {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eee;
+}
+
+.track-setting {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.track-setting-label {
+    font-size: 0.85rem;
+    color: var(--neutral-gray);
+}
+
+.channel-input {
+    width: 60px;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: monospace;
+    text-align: center;
+}
+
+/* CC Grid */
+.cc-grid-container h4 {
+    margin: 0 0 12px 0;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.cc-grid {
+    display: grid;
+    grid-template-columns: auto repeat(4, 1fr);
+    gap: 8px;
+    align-items: center;
+}
+
+.cc-grid-header {
+    display: contents;
+}
+
+.cc-column-header {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 4px;
+    border-radius: 4px;
+    color: white;
+}
+
+.cc-column-header.green { background-color: #00C853; }
+.cc-column-header.blue { background-color: #2196F3; }
+.cc-column-header.yellow { background-color: #F9A825; color: #333; }
+.cc-column-header.red { background-color: #F44336; }
+
+.cc-grid-row {
+    display: contents;
+}
+
+.cc-row-label {
+    font-size: 0.8rem;
+    color: var(--neutral-gray);
+    padding-right: 8px;
+}
+
+.cc-input {
+    width: 100%;
+    max-width: 60px;
+    padding: 8px;
+    border: 2px solid #e0e0e0;
+    border-radius: 5px;
+    font-family: monospace;
+    text-align: center;
+    transition: border-color 0.2s;
+}
+
+.cc-input:focus {
+    outline: none;
+}
+
+.cc-input.green { border-color: #00C853; }
+.cc-input.green:focus { box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.2); }
+
+.cc-input.blue { border-color: #2196F3; }
+.cc-input.blue:focus { box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2); }
+
+.cc-input.yellow { border-color: #F9A825; }
+.cc-input.yellow:focus { box-shadow: 0 0 0 2px rgba(249, 168, 37, 0.2); }
+
+.cc-input.red { border-color: #F44336; }
+.cc-input.red:focus { box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.2); }
+
+/* DMX Editor */
+.dmx-editor {
+    padding: 0;
+}
+
 #dmx-textarea {
     width: 100%;
-    min-height: 350px;
+    min-height: 500px;
     font-family: 'Courier New', monospace;
-    font-size: 13px;
-    padding: 15px;
-    border: 1px solid #ccc;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 20px;
+    border: none;
     border-radius: 5px;
     background-color: white;
     resize: vertical;
     box-sizing: border-box;
 }
 
+#dmx-textarea:focus {
+    outline: 2px solid var(--second-color);
+    outline-offset: -2px;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    #config-container {
+    .header-row {
         flex-direction: column;
     }
 
-    .config-section-wrapper {
-        margin: 0;
+    .tabs {
+        width: 100%;
+    }
+
+    .tab {
+        flex: 1;
+        text-align: center;
+        padding: 10px 12px;
+    }
+
+    .midi-global-section .config-form-inner {
+        grid-template-columns: 1fr;
+    }
+
+    .track-settings-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .cc-grid {
+        gap: 4px;
+    }
+
+    .cc-input {
+        max-width: none;
+        padding: 6px;
     }
 }

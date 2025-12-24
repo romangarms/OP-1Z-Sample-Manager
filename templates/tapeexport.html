@@ -13,7 +13,9 @@
 
 <h1>OP-1 Tape Export</h1>
 
-{{ nav_button('/', 'Home Page') }}
+<div class="header-row">
+    {{ nav_button('/', 'Home', icon='home') }}
+</div>
 
 <div id="device-error-container" class="error-container container" hidden>
     <p id="device-error-message">OP-1 not configured. Please configure your OP-1 in <a href="/utilitysettings" class="btn btn-danger">Utility Settings</a></p>
@@ -30,6 +32,7 @@
         </div>
     </div>
 </div>
+<script>lucide.createIcons();</script>
 
 <div id="main-content" hidden>
     <!-- Tape Tracks Section -->

@@ -12,46 +12,47 @@
 {% block main %}
 <h1>OP-Z Config Editor</h1>
 
-{{ nav_button('/', 'Home Page') }}
-<button id="save-button" class="btn btn-secondary">Save Changes</button>
+<div class="header-row">
+    {{ nav_button('/', 'Home', icon='home') }}
+    <div id="config-tabs-container"></div>
+</div>
 
 <div id="device-error-container" class="error-container container" hidden>
     <p id="device-error-message">OP-Z not configured. Please configure your OP-Z in <a href="/utilitysettings" class="btn btn-danger">Utility Settings</a></p>
 </div>
 
 <div id="main-content">
+    <div id="config-container">
+        <!-- General Tab Content -->
+        <div id="tab-general" class="tab-content">
+            <div class="config-section">
+                <form id="general-form" class="config-form-inner"></form>
+            </div>
+        </div>
 
+        <!-- MIDI Tab Content -->
+        <div id="tab-midi" class="tab-content" hidden>
+            <div class="config-section">
+                <!-- Global MIDI Settings -->
+                <div id="midi-global-settings" class="midi-global-section">
+                    <h3>Global MIDI Settings</h3>
+                    <form id="midi-global-form" class="config-form-inner"></form>
+                </div>
 
-<div id="config-container">
-  <!-- First Row: General and MIDI side by side -->
-  <div class="config-row">
-    <!-- General Config Section -->
-    <div class="config-section-wrapper">
-      <div class="config-section">
-        <h3>General Config</h3>
-        <form id="general-form" class="config-form-inner"></form>
-      </div>
+                <!-- Track Sections (Accordions) -->
+                <div id="midi-track-sections" class="track-accordions"></div>
+            </div>
+        </div>
+
+        <!-- DMX Tab Content -->
+        <div id="tab-dmx" class="tab-content" hidden>
+            <div class="config-section">
+                <div class="config-form-inner dmx-editor">
+                    <textarea id="dmx-textarea" placeholder="DMX configuration will load here..."></textarea>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- MIDI Config Section -->
-    <div class="config-section-wrapper">
-      <div class="config-section">
-        <h3>MIDI Config</h3>
-        <form id="midi-form" class="config-form-inner"></form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Second Row: DMX full width -->
-  <div class="config-section-wrapper full-width">
-    <div class="config-section">
-      <h3>DMX Config</h3>
-      <div class="config-form-inner">
-        <textarea id="dmx-textarea" placeholder="DMX configuration will load here..."></textarea>
-      </div>
-    </div>
-  </div>
-</div>
 </div>
 
 <script>
@@ -73,6 +74,7 @@ async function checkDeviceRequirement() {
 checkDeviceRequirement();
 </script>
 
+<script src="/static/js/components/tabs.js"></script>
 <script src="/static/js/configeditor.js"></script>
 
 {% endblock %}

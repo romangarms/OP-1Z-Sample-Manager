@@ -1,6 +1,9 @@
-{# Macro for a navigation button #}
-{% macro nav_button(url, text, style='primary') %}
-<button onclick="window.location.href='{{ url }}'" class="btn btn-{{ style }}">{{ text }}</button>
+{# Macro for a navigation button with optional icon #}
+{% macro nav_button(url, text, style='primary', icon=none) %}
+<button onclick="window.location.href='{{ url }}'" class="nav-btn nav-btn-{{ style }}">
+    {% if icon %}<i data-lucide="{{ icon }}"></i>{% endif %}
+    {{ text }}
+</button>
 {% endmacro %}
 
 {# Macro for a single sample category box #}

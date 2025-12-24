@@ -12,8 +12,13 @@
 {% block main %}
 <h1>OP-Z Sample Manager and Converter Utility Settings</h1>
 
-{{ nav_button('/', 'Home Page') }}
-<button onclick="resetConfig()" class="btn btn-danger">Reset Config</button>
+<div class="header-row">
+    {{ nav_button('/', 'Home', icon='home') }}
+    <button onclick="resetConfig()" class="nav-btn nav-btn-danger">
+        <i data-lucide="rotate-ccw"></i>
+        Reset Config
+    </button>
+</div>
 
 <hr>
 

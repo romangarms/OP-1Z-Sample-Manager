@@ -12,9 +12,13 @@
 {% block main %}
 <h1>OP-Z Sample Converter</h1>
 
-{{ nav_button('/', 'Home Page') }}
-
-<button onclick="openExplorer()" class="btn btn-secondary">Open Converted Directory</button>
+<div class="header-row">
+    {{ nav_button('/', 'Home', icon='home') }}
+    <button onclick="openExplorer()" class="nav-btn nav-btn-secondary">
+        <i data-lucide="folder-open"></i>
+        Open Converted
+    </button>
+</div>
 
 <div id="file-list">
     <div class="drop-zone-container">

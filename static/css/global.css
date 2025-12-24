@@ -133,6 +133,83 @@ h3 {
 }
 
 /* ===========================================
+   Header Row / Navbar Component
+   =========================================== */
+
+.header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+/* ===========================================
+   Navigation Buttons
+   =========================================== */
+
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-btn i {
+    width: 18px;
+    height: 18px;
+}
+
+.nav-btn-primary { background-color: var(--first-color); color: white; }
+.nav-btn-secondary { background-color: var(--second-color); color: white; }
+.nav-btn-warning { background-color: var(--third-color); color: #333; }
+.nav-btn-danger { background-color: var(--fourth-color); color: white; }
+
+/* ===========================================
+   Tabs Component
+   =========================================== */
+
+.tabs, .device-tabs {
+    display: flex;
+    gap: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: white;
+}
+
+.tab, .device-tab {
+    padding: 10px 20px;
+    border: none;
+    background-color: white;
+    color: var(--text-color);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab:hover, .device-tab:hover {
+    background-color: var(--offwhite);
+}
+
+.tab.active, .device-tab.active {
+    background-color: var(--second-color);
+    color: white;
+}
+
+/* ===========================================
    Toast Notification System
    =========================================== */
 
