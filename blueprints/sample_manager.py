@@ -7,7 +7,7 @@ import shutil
 from flask import Blueprint, request, jsonify, current_app, send_file
 from .config import get_device_mount_path
 from .sample_converter import convert_audio_file, UPLOAD_FOLDER
-from .utils import get_unique_filepath, get_ffmpeg_path
+from .utils import get_unique_filepath, run_ffmpeg
 
 # Create Blueprint
 sample_manager_bp = Blueprint('sample_manager', __name__)
@@ -989,27 +989,18 @@ def preview_sample():
     if ext in [".aif", ".aiff"]:
         temp_path = None
         try:
-            ffmpeg_path = get_ffmpeg_path()
-
             # Create a temporary WAV file
             with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
                 temp_path = tmp.name
 
             # Convert AIFF to WAV using ffmpeg
-            ffmpeg_cmd = [
-                ffmpeg_path,
+            result = run_ffmpeg([
                 "-y",  # overwrite output
                 "-i", path,
                 "-acodec", "pcm_s16le",  # 16-bit PCM
                 "-ar", "44100",  # 44.1kHz sample rate
                 temp_path
-            ]
-
-            result = subprocess.run(
-                ffmpeg_cmd,
-                capture_output=True,
-                timeout=10  # 10 second timeout
-            )
+            ], capture_output=True, timeout=10)
 
             if result.returncode != 0:
                 current_app.logger.error(f"FFmpeg conversion failed: {result.stderr.decode()}")

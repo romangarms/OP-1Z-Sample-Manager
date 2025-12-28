@@ -54,3 +54,25 @@ def get_ffmpeg_path():
     else:
         # Development mode - use system ffmpeg
         return 'ffmpeg'
+
+
+def run_ffmpeg(args, **kwargs):
+    """Run FFMPEG with the correct path and platform-specific settings.
+
+    Args:
+        args: List of arguments to pass to FFMPEG (without the ffmpeg command itself)
+        **kwargs: Additional arguments to pass to subprocess.run()
+
+    Returns:
+        subprocess.CompletedProcess result
+    """
+    import subprocess
+
+    ffmpeg_path = get_ffmpeg_path()
+    cmd = [ffmpeg_path] + args
+
+    # Hide console window on Windows
+    if sys.platform == 'win32':
+        kwargs.setdefault('creationflags', subprocess.CREATE_NO_WINDOW)
+
+    return subprocess.run(cmd, **kwargs)

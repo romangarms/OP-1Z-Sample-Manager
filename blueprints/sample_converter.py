@@ -5,7 +5,7 @@ import tempfile
 import uuid
 from flask import Blueprint, request, jsonify, current_app
 from .config import get_config_setting
-from .utils import get_ffmpeg_path
+from .utils import run_ffmpeg
 
 # Create Blueprint
 sample_converter_bp = Blueprint('sample_converter', __name__)
@@ -44,26 +44,16 @@ def convert_audio_file(input_path, output_path, sample_type):
         Exception if conversion fails
     """
     max_duration = 12 if sample_type == "drum" else 6
-    ffmpeg_path = get_ffmpeg_path()
 
-    ffmpeg_cmd = [
-        ffmpeg_path,
-        "-i",
-        input_path,
-        "-af",
-        "loudnorm",  # normalize audio
-        "-t",
-        str(max_duration),  # trim to correct duration
-        "-ac",
-        "1",  # force mono
-        "-ar",
-        "44100",  # sample rate 44.1k
-        "-sample_fmt",
-        "s16",  # 16-bit samples
+    run_ffmpeg([
+        "-i", input_path,
+        "-af", "loudnorm",  # normalize audio
+        "-t", str(max_duration),  # trim to correct duration
+        "-ac", "1",  # force mono
+        "-ar", "44100",  # sample rate 44.1k
+        "-sample_fmt", "s16",  # 16-bit samples
         output_path,
-    ]
-
-    subprocess.run(ffmpeg_cmd, check=True)
+    ], check=True)
     return True
 
 @sample_converter_bp.route("/convert", methods=["POST"])

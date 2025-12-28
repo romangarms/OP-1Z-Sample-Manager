@@ -17,7 +17,7 @@ from .utils import (
     TAPE_DIR,
     TAPE_TRACK_PREFIX,
     AIFF_EXTENSION,
-    get_ffmpeg_path,
+    run_ffmpeg,
 )
 
 # Create Blueprint
@@ -143,9 +143,8 @@ def needs_conversion(source_path, cache_path):
 
 def convert_to_wav(source_path, cache_path):
     """Convert AIFF to WAV using FFmpeg."""
-    ffmpeg_path = get_ffmpeg_path()
-    subprocess.run(
-        [ffmpeg_path, "-y", "-i", source_path, cache_path],
+    run_ffmpeg(
+        ["-y", "-i", source_path, cache_path],
         capture_output=True,
         check=True
     )
