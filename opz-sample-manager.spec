@@ -38,31 +38,6 @@ hiddenimports += [
     'blueprints.backup',
 ]
 
-# Exclude unused PyQt5 modules to reduce size
-excludes = [
-    'PyQt5.QtBluetooth',
-    'PyQt5.QtDBus',
-    'PyQt5.QtDesigner',
-    'PyQt5.QtHelp',
-    'PyQt5.QtLocation',
-    'PyQt5.QtMultimedia',
-    'PyQt5.QtMultimediaWidgets',
-    'PyQt5.QtNfc',
-    'PyQt5.QtOpenGL',
-    'PyQt5.QtPositioning',
-    'PyQt5.QtQml',
-    'PyQt5.QtQuick',
-    'PyQt5.QtQuickWidgets',
-    'PyQt5.QtRemoteObjects',
-    'PyQt5.QtSensors',
-    'PyQt5.QtSerialPort',
-    'PyQt5.QtSql',
-    'PyQt5.QtSvg',
-    'PyQt5.QtTest',
-    'PyQt5.QtXml',
-    'PyQt5.QtXmlPatterns',
-]
-
 a = Analysis(
     ['main.py'],
     pathex=[],
@@ -72,7 +47,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=excludes,
+    excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
