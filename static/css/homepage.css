@@ -7,10 +7,77 @@
     padding: 0 20px;
 }
 
+/* Sidebar Container - Fixed to left edge */
+.sidebar-container {
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    z-index: 100;
+}
+
 /* Device Status Sidebar */
 .device-sidebar {
     width: 200px;
     flex-shrink: 0;
+    transition: margin-left 0.3s ease, opacity 0.3s ease;
+    background: var(--page-background);
+    padding: 15px;
+    border-radius: 0;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+}
+
+.device-sidebar.collapsed {
+    margin-left: -200px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Sidebar Toggle - Attached to right edge of panel */
+.sidebar-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--background-color);
+    border: 1px solid #d0d0d0;
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    padding: 12px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 120px;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+    margin-left: -1px; /* overlap border with sidebar */
+}
+
+.sidebar-toggle:hover {
+    background: #e8e8e8;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.12);
+}
+
+.sidebar-toggle .toggle-icon {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.3s ease;
+    color: var(--neutral-gray);
+}
+
+.sidebar-toggle.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.sidebar-toggle .toggle-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--neutral-gray);
 }
 
 .sidebar-title {
@@ -289,11 +356,50 @@
         padding: 0 15px;
     }
 
+    .sidebar-container {
+        position: fixed;
+        left: 0;
+        top: auto;
+        bottom: 80px;
+        transform: none;
+        flex-direction: column;
+    }
+
+    .sidebar-toggle {
+        flex-direction: row;
+        min-height: auto;
+        padding: 10px 15px;
+        border-radius: 0 0 10px 0;
+        margin-left: 0;
+        margin-top: -1px;
+    }
+
+    .sidebar-toggle .toggle-label {
+        writing-mode: horizontal-tb;
+    }
+
+    .sidebar-toggle .toggle-icon {
+        transform: rotate(90deg);
+    }
+
+    .sidebar-toggle.active .toggle-icon {
+        transform: rotate(270deg);
+    }
+
     .device-sidebar {
-        width: 100%;
+        width: auto;
         display: flex;
         gap: 12px;
-        margin-bottom: 10px;
+        padding: 15px;
+        border-radius: 0 10px 0 0;
+        margin-left: 0;
+        transition: margin-top 0.3s ease, opacity 0.3s ease;
+    }
+
+    .device-sidebar.collapsed {
+        margin-left: 0;
+        margin-top: -100px;
+        opacity: 0;
     }
 
     .sidebar-title {

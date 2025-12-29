@@ -127,6 +127,11 @@ const deviceStatus = {
         if (typeof updateDeviceSidebar === 'function') {
             updateDeviceSidebar(device, connected, path, mode);
         }
+
+        // Auto-expand sidebar when device connects
+        if (connected && typeof expandSidebar === 'function') {
+            expandSidebar();
+        }
     },
 
     /**

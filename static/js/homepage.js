@@ -5,6 +5,82 @@
  */
 
 /**
+ * Load sidebar state from config and check device status
+ */
+async function loadSidebarState() {
+    const sidebar = document.getElementById('device-sidebar');
+    if (!sidebar) return;
+
+    try {
+        // First check if any device is connected - if so, expand
+        const status = await deviceStatus.getStatus();
+        if (status && (status.opz.connected || status.op1.connected)) {
+            sidebar.classList.remove('collapsed');
+            updateToggleButton(false);
+            return;
+        }
+
+        // No devices connected - check saved preference
+        const response = await fetch('/get-config-setting?config_option=SIDEBAR_EXPANDED');
+        const data = await response.json();
+        if (data.config_value === true) {
+            sidebar.classList.remove('collapsed');
+            updateToggleButton(false);
+        }
+    } catch (e) {
+        console.error('Error loading sidebar state:', e);
+    }
+}
+
+/**
+ * Toggle sidebar visibility and save preference
+ */
+async function toggleSidebar() {
+    const sidebar = document.getElementById('device-sidebar');
+    if (!sidebar) return;
+
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    updateToggleButton(isCollapsed);
+
+    try {
+        await fetch('/set-config-setting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ config_option: 'SIDEBAR_EXPANDED', config_value: !isCollapsed })
+        });
+    } catch (e) {
+        console.error('Error saving sidebar state:', e);
+    }
+}
+
+/**
+ * Update toggle button appearance based on sidebar state
+ */
+function updateToggleButton(isCollapsed) {
+    const button = document.getElementById('sidebar-toggle');
+    if (!button) return;
+    button.classList.toggle('active', !isCollapsed);
+}
+
+/**
+ * Expand sidebar (called when device connects)
+ */
+function expandSidebar() {
+    const sidebar = document.getElementById('device-sidebar');
+    if (!sidebar || !sidebar.classList.contains('collapsed')) return;
+
+    sidebar.classList.remove('collapsed');
+    updateToggleButton(false);
+
+    // Save expanded state
+    fetch('/set-config-setting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config_option: 'SIDEBAR_EXPANDED', config_value: true })
+    }).catch(e => console.error('Error saving sidebar state:', e));
+}
+
+/**
  * Update device sidebar card with current status
  */
 function updateDeviceSidebar(device, connected, path, mode) {
@@ -81,6 +157,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Lucide icons
     lucide.createIcons();
 
-    // Initialize device sidebar
+    // Load sidebar state (checks devices and config)
+    loadSidebarState();
+
+    // Initialize device sidebar status
     initDeviceSidebar();
 });

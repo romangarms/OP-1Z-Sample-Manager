@@ -12,9 +12,11 @@
 <h1>Teenage Engineering Sample Utility</h1>
 
 <div class="home-layout">
-    <!-- Device Status Sidebar -->
-    <aside class="device-sidebar">
-        <h3 class="sidebar-title">DEVICES <span class="beta-badge">BETA</span></h3>
+    <!-- Device Sidebar Container -->
+    <div class="sidebar-container">
+        <!-- Device Status Sidebar -->
+        <aside class="device-sidebar collapsed" id="device-sidebar">
+            <h3 class="sidebar-title">DEVICES <span class="beta-badge">BETA</span></h3>
 
         <!-- OP-Z Status Card -->
         <div class="device-card" id="opz-status-card" onclick="deviceStatus.openDeviceDirectory('opz')">
@@ -39,7 +41,14 @@
                 <span class="device-path" id="op1-path-text"></span>
             </div>
         </div>
-    </aside>
+        </aside>
+
+        <!-- Toggle Bar - attached to right edge of sidebar -->
+        <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle devices panel">
+            <i data-lucide="chevron-right" class="toggle-icon"></i>
+            <span class="toggle-label">Devices</span>
+        </button>
+    </div>
 
     <!-- Main Content -->
     <main class="home-main">
