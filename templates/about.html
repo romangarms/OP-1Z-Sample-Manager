@@ -34,6 +34,23 @@
     .credits-list a:hover {
         text-decoration: underline;
     }
+    .github-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: #333;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+    .github-button:hover {
+        background: #555;
+        text-decoration: none;
+        color: white;
+    }
 </style>
 {% endblock %}
 
@@ -70,7 +87,8 @@
     <div class="about-section">
         <h2>Source Code</h2>
         <p>
-            <a href="https://github.com/romangarms/opz-sample-manager" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com/romangarms/opz-sample-manager" target="_blank" rel="noopener noreferrer" class="github-button">
+                <i data-lucide="github"></i>
                 View on GitHub
             </a>
         </p>

@@ -16,9 +16,15 @@
     --text-color: #212529;
 }
 
-html, body {
+html {
+    background-color: var(--offwhite);
+    overflow-y: scroll;
+}
+
+body {
     background-color: var(--offwhite);
     overscroll-behavior: none;
+    min-height: 100vh;
 }
 
 .btn {

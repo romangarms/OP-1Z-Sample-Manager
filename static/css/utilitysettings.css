@@ -49,15 +49,6 @@ hr {
   margin: 20px 0;
 }
 
-.auto-detect-info {
-  margin-bottom: 15px;
-}
-
-.auto-detect-info p {
-  margin: 0;
-  color: var(--text-color);
-}
-
 /* Developer Mode Toggle */
 .developer-mode-toggle {
   display: flex;

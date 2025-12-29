@@ -24,18 +24,14 @@
 
 <!-- Device Detection Mode -->
 <div class="settings-section">
-    <div class="auto-detect-info">
-        <p><strong>Device Detection:</strong> Devices are automatically detected when connected via USB.</p>
-    </div>
-
     <div class="developer-mode-toggle">
         <label class="toggle-switch">
             <input type="checkbox" id="developer-mode-toggle" onchange="toggleDeveloperMode()">
             <span class="toggle-slider"></span>
         </label>
-        <span class="toggle-label">Developer Mode (Manual Device Paths)</span>
+        <span class="toggle-label">Developer Mode</span>
     </div>
-    <p class="toggle-description">Enable to manually set device paths for testing without physical devices.</p>
+    <p class="toggle-description">Enable to access advanced settings for debugging and testing.</p>
 </div>
 
 <!-- Manual Device Paths (hidden by default, shown in developer mode) -->
@@ -61,6 +57,19 @@
       Open Folder Browser
     </button>
     <p id="op1-info"></p>
+
+    <hr>
+
+    <!-- Logger Level Dropdown -->
+    <div>Set logger verbosity level:</div>
+    <select class="form-select" id="logger-level-select" onchange="setLoggerLevelFromDropdown()">
+      <option value="DEBUG">DEBUG</option>
+      <option value="INFO">INFO</option>
+      <option value="WARNING">WARNING</option>
+      <option value="ERROR">ERROR</option>
+      <option value="CRITICAL">CRITICAL</option>
+    </select>
+    <p id="logger-info"></p>
 </div>
 
 <hr>
@@ -73,19 +82,6 @@
   Open Folder Browser
 </button>
 <p id="working-dir-info"></p>
-
-<hr>
-
-<!-- Logger Level Dropdown -->
-<div>Set logger verbosity level:</div>
-<select class="form-select" id="logger-level-select" onchange="setLoggerLevelFromDropdown()">
-  <option value="DEBUG">DEBUG</option>
-  <option value="INFO">INFO</option>
-  <option value="WARNING">WARNING</option>
-  <option value="ERROR">ERROR</option>
-  <option value="CRITICAL">CRITICAL</option>
-</select>
-<p id="logger-info"></p>
 
 <script src="/static/js/utilitysettings.js"></script>
 {% endblock %}
