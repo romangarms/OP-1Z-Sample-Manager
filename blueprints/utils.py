@@ -47,8 +47,10 @@ def get_ffmpeg_path():
     """
     if getattr(sys, 'frozen', False):
         # Running as bundled app
-        if sys.platform == 'darwin' or sys.platform == 'linux':
+        if sys.platform == 'darwin':
             return os.path.join(sys._MEIPASS, 'bin', 'ffmpeg')
+        if sys.platform == 'linux':
+            return 'ffmpeg' # should be installed when installed via package manager
         else:  # Windows
             return os.path.join(sys._MEIPASS, 'bin', 'ffmpeg.exe')
     else:
