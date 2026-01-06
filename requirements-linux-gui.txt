@@ -1,0 +1,3 @@
+# just used for bundling GUI on Linux
+PySide6==6.10.1
+qtpy==2.4.3

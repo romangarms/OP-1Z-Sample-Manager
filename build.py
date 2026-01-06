@@ -188,8 +188,6 @@ def ensure_ffmpeg():
         print("  Ubuntu/Debian: sudo apt install ffmpeg")
         print("  Fedora: sudo dnf install ffmpeg")
         print("  Arch: sudo pacman -S ffmpeg")
-        print("You may also place the FFMPEG binary manually in the bin/ directory.")
-        return False  # Continue build anyway
     else:
         print(f"Unsupported platform: {sys.platform}")
         print("Please manually place the FFMPEG binary in the bin/ directory.")

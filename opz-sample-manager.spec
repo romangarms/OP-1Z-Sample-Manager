@@ -11,8 +11,11 @@ block_cipher = None
 if sys.platform == 'darwin':
     ffmpeg_binary = [('bin/ffmpeg', 'bin')]
 elif sys.platform == 'linux':
-    # On Linux, use system ffmpeg from PATH (no bundling needed)
-    ffmpeg_binary = []
+    # On Linux, bundle ffmpeg from PATH
+    ffmpeg_path = shutil.which('ffmpeg')
+    if not ffmpeg_path:
+        raise SystemExit("ffmpeg not found on PATH; install it before building to bundle.")
+    ffmpeg_binary = [(ffmpeg_path, 'bin')]
 else:
     # Windows
     ffmpeg_binary = [('bin/ffmpeg.exe', 'bin')]
