@@ -40,12 +40,15 @@ def get_bin_dir():
 
 def get_ffmpeg_path():
     """Get the expected FFMPEG binary path for the current platform."""
-    bin_dir = get_bin_dir()
-    if sys.platform == "darwin":
-        return os.path.join(bin_dir, "ffmpeg")
-    else:  # Windows
-        return os.path.join(bin_dir, "ffmpeg.exe")
 
+    bin_dir = get_bin_dir()
+    if sys.platform == "win32":
+        return os.path.join(bin_dir, "ffmpeg.exe")
+    else:  # this is either linux or macos or some strange os that I've never heard of. use the unix which path to try and find, else default to bin/ffmpeg
+        ffmpeg = shutil.which("ffmpeg")
+        if ffmpeg:
+            return ffmpeg
+        return os.path.join(bin_dir, "ffmpeg")
 
 def download_file(url, dest_path, description="file"):
     """Download a file with progress indicator."""
@@ -180,6 +183,13 @@ def ensure_ffmpeg():
         return download_ffmpeg_macos()
     elif sys.platform == "win32":
         return download_ffmpeg_windows()
+    elif sys.platform == "linux":
+        print("On Linux, FFMPEG should be installed via your package manager:")
+        print("  Ubuntu/Debian: sudo apt install ffmpeg")
+        print("  Fedora: sudo dnf install ffmpeg")
+        print("  Arch: sudo pacman -S ffmpeg")
+        print("You may also place the FFMPEG binary manually in the bin/ directory.")
+        return False  # Continue build anyway
     else:
         print(f"Unsupported platform: {sys.platform}")
         print("Please manually place the FFMPEG binary in the bin/ directory.")
@@ -244,6 +254,8 @@ def main():
 
     if sys.platform == "darwin":
         print("App bundle: dist/OP-Z Sample Manager.app")
+    elif sys.platform == "linux":
+        print("Output folder: dist/opz-sample-manager/")
     else:
         print("Output: dist/OP-Z Sample Manager/")
 

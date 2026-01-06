@@ -1,5 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import shutil
 import sys
 import os
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
@@ -9,7 +10,11 @@ block_cipher = None
 # Platform-specific FFMPEG binary
 if sys.platform == 'darwin':
     ffmpeg_binary = [('bin/ffmpeg', 'bin')]
+elif sys.platform == 'linux':
+    # On Linux, use system ffmpeg from PATH (no bundling needed)
+    ffmpeg_binary = []
 else:
+    # Windows
     ffmpeg_binary = [('bin/ffmpeg.exe', 'bin')]
 
 # Collect all Flask and Jinja2 data files
@@ -74,6 +79,33 @@ if sys.platform == 'win32':
         disable_windowed_traceback=False,
         target_arch=None,
         icon='static/favicon.ico',
+    )
+elif sys.platform == 'linux':
+    # Linux: Folder mode (no .app bundle)
+    exe = EXE(
+        pyz,
+        a.scripts,
+        [],
+        exclude_binaries=True,
+        name='opz-sample-manager',
+        debug=False,
+        bootloader_ignore_signals=False,
+        strip=True,
+        upx=True,
+        console=False,
+        disable_windowed_traceback=False,
+        target_arch=None,
+    )
+
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=True,
+        upx=True,
+        upx_exclude=[],
+        name='opz-sample-manager',
     )
 else:
     # macOS: Folder mode, then wrap in .app bundle
