@@ -79,6 +79,14 @@ body {
     font-weight: 600;
 }
 
+.error-container .btn-danger {
+    color: white;
+}
+
+.error-container .btn-danger:hover {
+    color: white;
+}
+
 .error-container a:hover {
     text-decoration: none;
 }
