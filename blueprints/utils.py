@@ -76,3 +76,28 @@ def run_ffmpeg(args, **kwargs):
         kwargs.setdefault('creationflags', subprocess.CREATE_NO_WINDOW)
 
     return subprocess.run(cmd, **kwargs)
+
+
+def open_in_file_manager(path: str) -> None:
+    """Open a path in the system file manager."""
+    import subprocess
+
+    if sys.platform == "win32":
+        os.startfile(path)
+        return
+    if sys.platform == "darwin":
+        subprocess.Popen(["open", path])
+        return
+    subprocess.Popen(["xdg-open", path])
+
+
+def open_external_link(url: str) -> None:
+    """Open a URL in the system browser."""
+    import subprocess
+    import webbrowser
+
+    if sys.platform in ("win32", "darwin"):
+        webbrowser.open(url)
+        return
+
+    subprocess.Popen(["xdg-open", url])

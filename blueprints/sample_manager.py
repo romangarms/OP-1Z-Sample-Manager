@@ -7,7 +7,7 @@ import shutil
 from flask import Blueprint, request, jsonify, current_app, send_file
 from .config import get_device_mount_path
 from .sample_converter import convert_audio_file, UPLOAD_FOLDER
-from .utils import get_unique_filepath, run_ffmpeg
+from .utils import get_unique_filepath, run_ffmpeg, open_in_file_manager
 
 # Create Blueprint
 sample_manager_bp = Blueprint('sample_manager', __name__)
@@ -520,15 +520,7 @@ def open_device_directory():
         return {"error": f"{device_name} directory not found"}, 404
 
     try:
-        import platform
-        system = platform.system()
-
-        if system == "Windows":
-            os.startfile(mount_path)
-        elif system == "Darwin":  # macOS
-            subprocess.run(["open", mount_path])
-        else:  # Linux
-            subprocess.run(["xdg-open", mount_path])
+        open_in_file_manager(mount_path)
 
         return {"status": "opened"}, 200
     except Exception as e:
@@ -1051,4 +1043,3 @@ def preview_sample():
     except Exception as e:
         current_app.logger.error(f"Error serving sample preview: {e}")
         return {"error": "Failed to serve file"}, 500
-

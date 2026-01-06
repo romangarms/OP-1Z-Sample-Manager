@@ -1,6 +1,5 @@
 import sys
 import os
-import webbrowser
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from blueprints.config import load_config, run_all_config_tasks, get_config_setting, set_config_setting, config_bp
@@ -10,6 +9,7 @@ from blueprints.tape_export import tape_export_bp
 from blueprints.dialogs import dialog_bp
 from blueprints.backup import backup_bp
 from blueprints.device_monitor import device_monitor_bp, initialize_device_monitor
+from blueprints.utils import open_external_link
 
 # Get base path for PyInstaller or normal execution
 if getattr(sys, 'frozen', False):
@@ -96,7 +96,7 @@ def open_external_link():
         return jsonify({"error": "Invalid URL"}), 400
 
     try:
-        webbrowser.open(url)
+        open_external_link(url)
         return jsonify({"status": "opened"}), 200
     except Exception as e:
         app.logger.error(f"Error opening external link: {e}")

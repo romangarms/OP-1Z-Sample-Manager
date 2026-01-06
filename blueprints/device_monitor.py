@@ -9,10 +9,10 @@ import os
 import sys
 import time
 import threading
-import subprocess
 from queue import Queue
 from flask import Blueprint, Response, jsonify, current_app, request
 from .config import get_config_setting, set_config_setting
+from .utils import open_in_file_manager
 
 # Create Blueprint
 device_monitor_bp = Blueprint('device_monitor', __name__)
@@ -496,12 +496,7 @@ def open_device_directory():
         return jsonify({"error": "Device path not found"}), 404
 
     try:
-        if sys.platform == "darwin":
-            subprocess.Popen(["open", path])
-        elif sys.platform == "win32":
-            subprocess.Popen(["explorer", path])
-        else:
-            subprocess.Popen(["xdg-open", path])
+        open_in_file_manager(path)
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

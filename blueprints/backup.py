@@ -18,6 +18,7 @@ from .utils import (
     TAPE_TRACK_PREFIX,
     AIFF_EXTENSION,
     run_ffmpeg,
+    open_in_file_manager,
 )
 
 # Create Blueprint
@@ -442,22 +443,13 @@ def serve_backup_audio(device, timestamp, track_id):
 @backup_bp.route("/api/backup/open-folder")
 def open_backups_folder():
     """Open the backups folder in the file explorer."""
-    import platform
-
     backups_base = os.path.join(get_config_setting("WORKING_DIRECTORY"), "backups")
 
     # Create the folder if it doesn't exist
     os.makedirs(backups_base, exist_ok=True)
 
     try:
-        system = platform.system()
-
-        if system == "Windows":
-            os.startfile(backups_base)
-        elif system == "Darwin":  # macOS
-            subprocess.run(["open", backups_base])
-        else:  # Linux
-            subprocess.run(["xdg-open", backups_base])
+        open_in_file_manager(backups_base)
 
         return jsonify({"status": "opened", "path": backups_base})
     except Exception as e:

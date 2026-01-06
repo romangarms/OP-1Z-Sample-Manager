@@ -1,11 +1,10 @@
 import os
-import sys
 import subprocess
 import tempfile
 import uuid
 from flask import Blueprint, request, jsonify, current_app
 from .config import get_config_setting
-from .utils import run_ffmpeg
+from .utils import run_ffmpeg, open_in_file_manager
 
 # Create Blueprint
 sample_converter_bp = Blueprint('sample_converter', __name__)
@@ -101,12 +100,7 @@ def open_explorer():
     folder_path = get_converted_folder()
     os.makedirs(folder_path, exist_ok=True)
     try:
-        if sys.platform.startswith("win"):
-            subprocess.Popen(["explorer", folder_path])
-        elif sys.platform.startswith("darwin"):
-            subprocess.Popen(["open", folder_path])
-        else:  # Linux and others
-            subprocess.Popen(["xdg-open", folder_path])
+        open_in_file_manager(folder_path)
 
         return jsonify({"status": "opened", "path": folder_path}), 200
     except Exception as e:
