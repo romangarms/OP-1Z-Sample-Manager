@@ -50,13 +50,23 @@ a = Analysis(
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
-    hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
     noarchive=False,
+    hooksconfig={
+        "gi": {
+            "icons": ["Adwaita"],       # Only include one basic icon theme
+            "themes": ["Adwaita"],      # Only include one basic GTK theme
+            "languages": ["en_US"],     # Only include English translations
+            "module-versions": {
+                "Gtk": "3.0",
+                "WebKit2": "4.1"
+            },
+        },
+    },
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
