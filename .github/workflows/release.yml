@@ -1,0 +1,127 @@
+name: Build & Release (Win/macOS/Linux)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: windows-latest
+            platform: windows
+          - os: macos-latest
+            platform: macos
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Pin a packaging-friendly Python (PyInstaller tends to lag newest versions)
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      # Linux: satisfy your expectation that ffmpeg is installed system-wide
+      - name: Install system dependencies (Linux)
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+            sudo apt-get update
+            sudo apt-get install -y \
+                ffmpeg \
+                python3-dev \
+                pkg-config \
+                meson \
+                ninja-build \
+                gcc \
+                gobject-introspection \
+                libgirepository1.0-dev \
+                libglib2.0-dev \
+                libcairo2-dev \
+                libffi-dev \
+                gir1.2-gtk-3.0
+
+      # Win/mac: cache whatever build.py downloads into ./bin/ffmpeg*
+      - name: Cache downloaded ffmpeg (Win/mac)
+        if: matrix.platform != 'linux'
+        uses: actions/cache@v4
+        with:
+          path: |
+            bin/ffmpeg
+            bin/ffmpeg.exe
+          # Bump v1 -> v2 when you change the ffmpeg version/URL in build.py
+          key: ffmpeg-v1-${{ runner.os }}
+
+      - name: Install Python dependencies (all platforms)
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Install Linux GUI deps (Linux only)
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          pip install -r requirements-linux-gui.txt
+
+      - name: Build (build.py)
+        shell: bash
+        run: |
+          python build.py
+
+      - name: Package artifact
+        shell: bash
+        run: |
+          ARTIFACT="op1z-sample-manager-${{ matrix.platform }}-${{ github.ref_name }}"
+          mkdir -p artifacts
+
+          if [ ! -d "dist" ]; then
+            echo "dist/ not found; build likely failed."
+            exit 1
+          fi
+
+          cd dist
+          if command -v 7z >/dev/null 2>&1; then
+            7z a "../artifacts/${ARTIFACT}.zip" .
+          else
+            zip -r "../artifacts/${ARTIFACT}.zip" .
+          fi
+          cd ..
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: op1z-sample-manager-${{ matrix.platform }}-${{ github.ref_name }}
+          path: artifacts/*.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish GitHub Release with assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/**/*.zip
