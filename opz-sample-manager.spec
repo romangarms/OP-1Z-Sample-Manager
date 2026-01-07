@@ -42,6 +42,19 @@ hiddenimports += [
     'blueprints.dialogs',
     'blueprints.backup',
 ]
+hooksconfig = {}
+if sys.platform == 'linux':
+    hooksconfig = {
+        "gi": {
+            "icons": ["Adwaita"],       # Only include one basic icon theme
+            "themes": ["Adwaita"],      # Only include one basic GTK theme
+            "languages": ["en_US"],     # Only include English translations
+            "module-versions": {
+                "Gtk": "3.0",
+                "WebKit2": "4.1"
+            },
+        },
+    }
 
 a = Analysis(
     ['main.py'],
@@ -56,17 +69,7 @@ a = Analysis(
     win_private_assemblies=False,
     cipher=block_cipher,
     noarchive=False,
-    hooksconfig={
-        "gi": {
-            "icons": ["Adwaita"],       # Only include one basic icon theme
-            "themes": ["Adwaita"],      # Only include one basic GTK theme
-            "languages": ["en_US"],     # Only include English translations
-            "module-versions": {
-                "Gtk": "3.0",
-                "WebKit2": "4.1"
-            },
-        },
-    },
+    hooksconfig=hooksconfig,
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)

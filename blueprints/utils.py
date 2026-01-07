@@ -1,7 +1,8 @@
 """Shared utilities for blueprint modules."""
 import os
 import sys
-
+import subprocess
+import webbrowser
 
 # OP-1 Tape Constants
 TAPE_TRACK_IDS = [1, 2, 3, 4]
@@ -68,7 +69,6 @@ def run_ffmpeg(args, **kwargs):
     Returns:
         subprocess.CompletedProcess result
     """
-    import subprocess
 
     ffmpeg_path = get_ffmpeg_path()
     cmd = [ffmpeg_path] + args
@@ -82,7 +82,6 @@ def run_ffmpeg(args, **kwargs):
 
 def open_in_file_manager(path: str) -> None:
     """Open a path in the system file manager."""
-    import subprocess
 
     if sys.platform == "win32":
         os.startfile(path)
@@ -95,9 +94,6 @@ def open_in_file_manager(path: str) -> None:
 
 def open_external_link(url: str) -> None:
     """Open a URL in the system browser."""
-    import subprocess
-    import webbrowser
-
     if sys.platform in ("win32", "darwin"):
         webbrowser.open(url)
         return
