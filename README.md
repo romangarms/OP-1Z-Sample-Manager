@@ -6,8 +6,10 @@ This is a Flask app built with PyQt5 to handle everything with samples on the OP
 
 
 ### Run app using:
-1) Install requirements in ```requirements.txt```
+1) Install requirements in ```requirements.txt``` 
 2) ```python main.py``` **or** build app by running ```./build.sh```, and run the created executable under ```dist/```
+
+To build the app on linux, also install requirements in ```requirements-linux-gui.txt``` and any dependencies of that library.
 
 ### Using the App:
 - Double check that all paths are set correctly in Utility Settings
