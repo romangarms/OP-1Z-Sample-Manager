@@ -6,11 +6,12 @@ This is a Flask app built with PyQt5 to handle everything with samples on the OP
 
 
 ### Run app using:
-1) Install requirements in ```requirements.txt```
-2) ```python main.py``` **or** build app by running ```./build.sh```, and run the created executable under ```dist/```
+1) Have Python 3.9 - 3.14 installed. (3.9 is the lowest version that is supported in all of our dependencies, but 3.14 is the version that is being used for testing and development.
+2) Install requirements in ```requirements.txt```.
+3) ```python main.py``` **or** build with ```python build.py```, and run the created executable under ```dist/```.
 
 ### Using the App:
-- Double check that all paths are set correctly in Utility Settings
+- Double check that all paths are set correctly in Utility Settings.
 - Connect your device in disk mode and begin managing your samples, tapes, projects, and more!
 
 ## Screenshots
