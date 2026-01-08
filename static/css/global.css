@@ -163,6 +163,14 @@ h1 {
     text-align: center;
 }
 
+.page-description {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-top: -10px;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+}
+
 h3 {
     line-height: 1.5;
 }
