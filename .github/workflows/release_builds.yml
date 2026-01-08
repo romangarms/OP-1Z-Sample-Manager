@@ -35,7 +35,6 @@ jobs:
 
       # Win/mac: cache whatever build.py downloads into ./bin/ffmpeg*
       - name: Cache downloaded ffmpeg (Win/mac)
-        if: matrix.platform != 'linux'
         uses: actions/cache@v4
         with:
           path: |
