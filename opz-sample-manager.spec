@@ -3,6 +3,7 @@
 import sys
 import os
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules, collect_dynamic_libs
+from PyInstaller.utils.hooks.gi import GiModuleInfo
 
 block_cipher = None
 
@@ -20,12 +21,16 @@ datas = [
 
 # Collect GI typelibs and libraries for Linux
 binaries_extra = []
+hiddenimports_gi = []
 if sys.platform.startswith('linux'):
-    # Collect PyGObject data files (typelibs)
-    datas += collect_data_files('gi')
-
-    # Collect GI dynamic libraries
-    binaries_extra = collect_dynamic_libs('gi')
+    # Use GiModuleInfo to properly collect WebKit2 and all its dependencies
+    # This recursively collects typelibs, shared libraries, and hidden imports
+    # for WebKit2-4.1 and its dependencies (Gtk-3.0, Gdk-3.0, Soup-3.0, etc.)
+    webkit_info = GiModuleInfo('WebKit2', '4.1')
+    if webkit_info.available:
+        gi_binaries, gi_datas, hiddenimports_gi = webkit_info.collect_typelib_data()
+        binaries_extra.extend(gi_binaries)
+        datas.extend(gi_datas)
 
 # Collect hidden imports for Flask and related packages
 hiddenimports = [
@@ -37,20 +42,9 @@ hiddenimports = [
     'engineio.async_drivers.threading',
 ]
 
-# Add PyGObject/GTK hidden imports for Linux
+# Add PyGObject/GTK hidden imports for Linux (collected via GiModuleInfo)
 if sys.platform.startswith('linux'):
-    hiddenimports += [
-        'gi',
-        'gi.repository.Gtk',
-        'gi.repository.Gdk',
-        'gi.repository.GdkPixbuf',
-        'gi.repository.Pango',
-        'gi.repository.GObject',
-        'gi.repository.GLib',
-        'gi.repository.Gio',
-        'gi.repository.WebKit2',
-        'gi.repository.cairo',
-    ]
+    hiddenimports += hiddenimports_gi
 
 # Add blueprint modules
 hiddenimports += [
