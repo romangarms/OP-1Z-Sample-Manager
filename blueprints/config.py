@@ -36,7 +36,25 @@ app_config = {}
 
 def get_default_working_directory():
     """Return default working directory: ~/Documents/<PROJECT_NAME>/"""
-    documents = os.path.expanduser("~/Documents")
+    if sys.platform == 'win32':
+        # On Windows, use registry or USERPROFILE to find actual Documents folder
+        # This handles OneDrive redirection and custom locations
+        try:
+            import winreg
+            # Query Windows registry for the actual Documents folder location
+            key = winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
+            )
+            documents = winreg.QueryValueEx(key, "Personal")[0]
+            winreg.CloseKey(key)
+        except Exception:
+            # Fallback to USERPROFILE if registry fails
+            documents = os.path.join(os.environ.get('USERPROFILE', os.path.expanduser('~')), 'Documents')
+    else:
+        # On macOS and Linux, ~/Documents works correctly
+        documents = os.path.expanduser("~/Documents")
+
     return os.path.join(documents, PROJECT_NAME)
 
 # Utility to read JSON from a file and return it as a Python object
