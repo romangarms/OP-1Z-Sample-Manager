@@ -6,9 +6,41 @@ This is a Flask app built with PyQt5 to handle everything with samples on the OP
 
 
 ### Run app using:
+
+#### Linux:
 1) Have Python 3.9 - 3.14 installed. (3.13/3.14 suggested)
-2) Install requirements in ```requirements.txt```.
-3) ```python main.py``` **or** build with ```python build.py```, and run the created executable under ```dist/```.
+2) Install system dependencies:
+   ```bash
+   sudo apt update
+   sudo apt install -y python3-gi python3-gi-cairo gir1.2-gtk-3.0 gir1.2-webkit2-4.1 ffmpeg
+   ```
+3) Create virtual environment with system site packages (required for GTK access):
+   ```bash
+   python3 -m venv --system-site-packages .venv
+   source .venv/bin/activate
+   ```
+4) Install Python requirements:
+   ```bash
+   pip install -r requirements.txt
+   ```
+5) Run the app:
+   ```bash
+   python main.py
+   ```
+   Or build with ```python build.py```, and run the created executable under ```dist/```.
+
+#### Windows/macOS:
+1) Have Python 3.9 - 3.14 installed. (3.13/3.14 suggested)
+2) Create virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3) Install requirements:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4) ```python main.py``` **or** build with ```python build.py```, and run the created executable under ```dist/```.
 
 ### Using the App:
 - Double check that all paths are set correctly in Utility Settings.
