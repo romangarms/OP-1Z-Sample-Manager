@@ -2,7 +2,7 @@
 
 import sys
 import os
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules, collect_dynamic_libs
 
 block_cipher = None
 
@@ -18,6 +18,15 @@ datas = [
     ('templates', 'templates'),
 ]
 
+# Collect GI typelibs and libraries for Linux
+binaries_extra = []
+if sys.platform.startswith('linux'):
+    # Collect PyGObject data files (typelibs)
+    datas += collect_data_files('gi')
+
+    # Collect GI dynamic libraries
+    binaries_extra = collect_dynamic_libs('gi')
+
 # Collect hidden imports for Flask and related packages
 hiddenimports = [
     'flask',
@@ -27,6 +36,21 @@ hiddenimports = [
     'requests',
     'engineio.async_drivers.threading',
 ]
+
+# Add PyGObject/GTK hidden imports for Linux
+if sys.platform.startswith('linux'):
+    hiddenimports += [
+        'gi',
+        'gi.repository.Gtk',
+        'gi.repository.Gdk',
+        'gi.repository.GdkPixbuf',
+        'gi.repository.Pango',
+        'gi.repository.GObject',
+        'gi.repository.GLib',
+        'gi.repository.Gio',
+        'gi.repository.WebKit2',
+        'gi.repository.cairo',
+    ]
 
 # Add blueprint modules
 hiddenimports += [
@@ -41,7 +65,7 @@ hiddenimports += [
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=ffmpeg_binary,
+    binaries=ffmpeg_binary + binaries_extra,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],

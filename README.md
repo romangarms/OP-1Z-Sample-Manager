@@ -27,7 +27,7 @@ This is a Flask app built with PyQt5 to handle everything with samples on the OP
    ```bash
    python main.py
    ```
-   Or build with ```python build.py```, and run the created executable under ```dist/```.
+   Or build with ```python build.py```, and run the created executable under ```dist/```. The built executable bundles all dependencies including GTK, so it can be distributed without requiring users to install system packages.
 
 #### Windows/macOS:
 1) Have Python 3.9 - 3.14 installed. (3.13/3.14 suggested)
