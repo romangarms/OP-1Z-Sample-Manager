@@ -24,6 +24,11 @@ FFMPEG_URLS = {
     "win32": {
         # gyan.dev essentials build for Windows
         "url": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
+    },
+    "linux": {
+        # John Van Sickle provides static builds for Linux
+        "x86_64": "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz",
+        "aarch64": "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz",
     }
 }
 
@@ -41,10 +46,10 @@ def get_bin_dir():
 def get_ffmpeg_path():
     """Get the expected FFMPEG binary path for the current platform."""
     bin_dir = get_bin_dir()
-    if sys.platform == "darwin":
-        return os.path.join(bin_dir, "ffmpeg")
-    else:  # Windows
+    if sys.platform == "win32":
         return os.path.join(bin_dir, "ffmpeg.exe")
+    else:  # macOS and Linux
+        return os.path.join(bin_dir, "ffmpeg")
 
 
 def download_file(url, dest_path, description="file"):
@@ -166,6 +171,61 @@ def download_ffmpeg_windows():
             os.remove(tmp_path)
 
 
+def get_linux_arch():
+    """Get the Linux architecture."""
+    import platform
+    machine = platform.machine()
+    if machine in ("aarch64", "arm64"):
+        return "aarch64"
+    else:
+        return "x86_64"
+
+
+def download_ffmpeg_linux():
+    """Download and extract FFMPEG for Linux."""
+    bin_dir = get_bin_dir()
+    os.makedirs(bin_dir, exist_ok=True)
+
+    ffmpeg_path = get_ffmpeg_path()
+
+    # Get architecture-specific URL
+    arch = get_linux_arch()
+    url = FFMPEG_URLS["linux"][arch]
+
+    print(f"Detected Linux architecture: {arch}")
+
+    # Download to temp file
+    with tempfile.NamedTemporaryFile(suffix=".tar.xz", delete=False) as tmp:
+        tmp_path = tmp.name
+
+    try:
+        if not download_file(url, tmp_path, f"FFMPEG for Linux ({arch})"):
+            return False
+
+        # Extract ffmpeg from the tar.xz archive
+        print("Extracting FFMPEG...")
+        with tarfile.open(tmp_path, 'r:xz') as tf:
+            # Find ffmpeg binary in the archive
+            for member in tf.getmembers():
+                if member.name.endswith("/ffmpeg") and not member.name.endswith(".txt"):
+                    # Extract to temp location then move
+                    with tempfile.TemporaryDirectory() as extract_dir:
+                        tf.extract(member, extract_dir)
+                        extracted_path = os.path.join(extract_dir, member.name)
+                        shutil.copy2(extracted_path, ffmpeg_path)
+                    # Make executable
+                    os.chmod(ffmpeg_path, 0o755)
+                    print(f"FFMPEG installed to: {ffmpeg_path}")
+                    return True
+
+        print("Error: ffmpeg not found in archive")
+        return False
+    finally:
+        # Clean up temp file
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
 def ensure_ffmpeg():
     """Ensure FFMPEG is available, downloading if necessary."""
     ffmpeg_path = get_ffmpeg_path()
@@ -180,6 +240,8 @@ def ensure_ffmpeg():
         return download_ffmpeg_macos()
     elif sys.platform == "win32":
         return download_ffmpeg_windows()
+    elif sys.platform.startswith("linux"):
+        return download_ffmpeg_linux()
     else:
         print(f"Unsupported platform: {sys.platform}")
         print("Please manually place the FFMPEG binary in the bin/ directory.")

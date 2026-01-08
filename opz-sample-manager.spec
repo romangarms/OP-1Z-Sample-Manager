@@ -7,10 +7,10 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 block_cipher = None
 
 # Platform-specific FFMPEG binary
-if sys.platform == 'darwin':
-    ffmpeg_binary = [('bin/ffmpeg', 'bin')]
-else:
+if sys.platform == 'win32':
     ffmpeg_binary = [('bin/ffmpeg.exe', 'bin')]
+else:  # macOS and Linux
+    ffmpeg_binary = [('bin/ffmpeg', 'bin')]
 
 # Collect all Flask and Jinja2 data files
 datas = [
@@ -75,7 +75,7 @@ if sys.platform == 'win32':
         target_arch=None,
         icon='static/favicon.ico',
     )
-else:
+elif sys.platform == 'darwin':
     # macOS: Folder mode, then wrap in .app bundle
     exe = EXE(
         pyz,
@@ -118,4 +118,22 @@ else:
             'CFBundleShortVersionString': '1.0.0',
             'NSHighResolutionCapable': True,
         },
+    )
+else:
+    # Linux: Single-file executable (everything bundled into one file)
+    exe = EXE(
+        pyz,
+        a.scripts,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        [],
+        name='OP-Z Sample Manager',
+        debug=False,
+        bootloader_ignore_signals=False,
+        strip=True,
+        upx=True,
+        console=False,
+        disable_windowed_traceback=False,
+        target_arch=None,
     )
