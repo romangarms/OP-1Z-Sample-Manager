@@ -26,14 +26,18 @@ def display_update_notice():
     - github_version (str): The latest version from GitHub.
     """
 
-    if get_config_setting('update_checker_disable', False):
-        return jsonify(response_data)
-    
     response_data = {
         "display_update_notice": False,
         "current_version": APP_VERSION,
-        "github_version": get_latest_tag()
+        "github_version": "unknown"
     }
+
+    if get_config_setting('update_checker_disable', False):
+        response_data["github_version"] = "checking_disabled"
+        return jsonify(response_data)
+    
+    latest_tag = get_latest_tag()
+    response_data["github_version"] = latest_tag
 
     ignored_version = get_config_setting('update_checker_ignored_version')
     if (ignored_version is not None) and (ignored_version == response_data["github_version"]):
