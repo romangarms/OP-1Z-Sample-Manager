@@ -1,6 +1,8 @@
 import sys
 import os
 import threading
+import time
+import urllib.request
 import webview
 
 FLASK_URL = "http://127.0.0.1:5000"
@@ -18,18 +20,50 @@ def start_flask():
     app.run(debug=False, use_reloader=False, threaded=True)
 
 
+def wait_for_flask_and_load(window, timeout=30):
+    """Wait for Flask server to be ready, then load the URL."""
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            urllib.request.urlopen(FLASK_URL, timeout=1)
+            window.load_url(FLASK_URL)
+            return
+        except Exception:
+            time.sleep(0.1)
+
+
+def on_loaded(window):
+    """Called when loading screen DOM is ready."""
+    # Unsubscribe immediately to prevent being called again when Flask page loads
+    window.events.loaded -= on_loaded
+    # Start polling Flask in a separate thread
+    threading.Thread(target=wait_for_flask_and_load, args=(window,), daemon=True).start()
+
+
+def load_loading_html():
+    """Load the loading screen HTML from file."""
+    loading_path = os.path.join(get_base_dir(), "loading.html")
+    with open(loading_path, "r") as f:
+        return f.read()
+
+
 if __name__ == "__main__":
     # Start Flask in background thread
     flask_thread = threading.Thread(target=start_flask, daemon=True)
     flask_thread.start()
 
-    # Create window with pywebview
+    # Create window with dark background color (shown before WebView loads)
+    # and loading HTML (shown once WebView initializes)
     window = webview.create_window(
         title="OP-1Z Sample Manager",
-        url=FLASK_URL,
+        html=load_loading_html(),
         width=1280,
         height=720,
+        background_color="#1a1a1a",  # Matches loading screen - no white flash
     )
+
+    # Wait for loading screen DOM to be ready, then start polling Flask
+    window.events.loaded += on_loaded
 
     # Start the webview (blocks until window is closed)
     webview.start()

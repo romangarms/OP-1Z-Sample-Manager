@@ -1,6 +1,22 @@
+/* Make container fill viewport for vertical centering */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body > .container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 /* Home page layout with sidebar */
 .home-layout {
     display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
     gap: 30px;
     max-width: 1100px;
     margin: 0 auto;
@@ -23,7 +39,7 @@
     width: 200px;
     flex-shrink: 0;
     transition: margin-left 0.3s ease, opacity 0.3s ease;
-    background: var(--page-background);
+    background: var(--offwhite);
     padding: 15px;
     border-radius: 0;
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
@@ -184,16 +200,15 @@
 
 /* Main content area */
 .home-main {
-    flex: 1;
     min-width: 0;
 }
 
 .tile-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: clamp(15px, 2vw, 30px);
     margin: 30px auto;
-    max-width: 800px;
+    width: clamp(400px, 60vw, 1200px);
 }
 
 /* Container for split tiles (two half-width tiles side by side) */
@@ -354,61 +369,6 @@
     .home-layout {
         flex-direction: column;
         padding: 0 15px;
-    }
-
-    .sidebar-container {
-        position: fixed;
-        left: 0;
-        top: auto;
-        bottom: 80px;
-        transform: none;
-        flex-direction: column;
-    }
-
-    .sidebar-toggle {
-        flex-direction: row;
-        min-height: auto;
-        padding: 10px 15px;
-        border-radius: 0 0 10px 0;
-        margin-left: 0;
-        margin-top: -1px;
-    }
-
-    .sidebar-toggle .toggle-label {
-        writing-mode: horizontal-tb;
-    }
-
-    .sidebar-toggle .toggle-icon {
-        transform: rotate(90deg);
-    }
-
-    .sidebar-toggle.active .toggle-icon {
-        transform: rotate(270deg);
-    }
-
-    .device-sidebar {
-        width: auto;
-        display: flex;
-        gap: 12px;
-        padding: 15px;
-        border-radius: 0 10px 0 0;
-        margin-left: 0;
-        transition: margin-top 0.3s ease, opacity 0.3s ease;
-    }
-
-    .device-sidebar.collapsed {
-        margin-left: 0;
-        margin-top: -100px;
-        opacity: 0;
-    }
-
-    .sidebar-title {
-        display: none;
-    }
-
-    .device-card {
-        flex: 1;
-        margin-bottom: 0;
     }
 }
 
