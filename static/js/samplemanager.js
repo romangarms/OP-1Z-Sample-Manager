@@ -848,16 +848,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: formData
                 });
 
+                const result = await response.json();
+
                 if (!response.ok) {
-                    throw new Error("Upload failed");
+                    throw new Error(result.error || "Upload failed");
                 }
 
-                await response.json();
                 await fetchOpzSamples();
                 toast.success('Sample uploaded');
             } catch (err) {
                 console.error("Failed to upload file:", err);
-                toast.error('Upload failed');
+                toast.error(err.message || 'Upload failed');
             }
         });
     });

@@ -46,6 +46,7 @@ def convert_audio_file(input_path, output_path, sample_type):
     max_duration = 12 if sample_type == "drum" else 6
 
     run_ffmpeg([
+        "-y",  # overwrite output file without asking
         "-i", input_path,
         "-af", "loudnorm",  # normalize audio
         "-t", str(max_duration),  # trim to correct duration

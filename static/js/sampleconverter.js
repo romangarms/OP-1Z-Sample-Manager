@@ -61,14 +61,18 @@ async function handleFiles(files, type) {
             });
 
             const result = await response.json();
-            results.push(`${file.name}: ${result.message || "Success"}`);
+
+            if (!response.ok) {
+                results.push(`${file.name}: Error - ${result.error || 'Conversion failed'}`);
+            } else {
+                results.push(`${file.name}: ${result.message || 'Converted'}`);
+            }
         } catch (err) {
             results.push(`${file.name}: Error - ${err.message}`);
         }
     }
 
     // Show results as toast
-    console.log("Conversion results:", results);
     const successCount = results.filter(r => r.includes('Success') || r.includes('Converted')).length;
     const errorCount = results.length - successCount;
 
