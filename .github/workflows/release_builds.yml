@@ -39,6 +39,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Set the version in the version file to the name of the tag.
+      # If the ref is a tag, use it. Otherwise, (it is a branch name) so mark it as a dev build.
+      - name: Set version in version file.
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION="${{ github.ref_name }}-dev"
+          fi
+          echo "VERSION = \"${VERSION}\"" > blueprints/github_version_file.py
+
       - name: Build (build.py)
         shell: bash
         run: |
