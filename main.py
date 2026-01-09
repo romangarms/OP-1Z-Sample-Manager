@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     # Create window with pywebview
     window = webview.create_window(
-        title="OP-Z Sample Manager",
+        title="OP-1Z Sample Manager",
         url=FLASK_URL,
         width=1280,
         height=720,

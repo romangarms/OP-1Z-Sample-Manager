@@ -54,7 +54,7 @@ jobs:
           fi
           cd dist
           if [ "${{ matrix.platform }}" = "macos" ]; then
-            TARGET="OP-Z Sample Manager.app"
+            TARGET="OP-1Z Sample Manager.app"
           else
             TARGET="."
           fi

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Cross-platform build script for OP-Z Sample Manager.
+Cross-platform build script for OP-1Z Sample Manager.
 Downloads platform-specific FFMPEG and builds the application.
 """
 
@@ -214,7 +214,7 @@ def run_pyinstaller():
 def main():
     """Main build process."""
     print("=" * 60)
-    print("OP-Z Sample Manager Build Script")
+    print("OP-1Z Sample Manager Build Script")
     print("=" * 60)
     print()
 
@@ -243,9 +243,9 @@ def main():
     print("=" * 60)
 
     if sys.platform == "darwin":
-        print("App bundle: dist/OP-Z Sample Manager.app")
+        print("App bundle: dist/OP-1Z Sample Manager.app")
     else:
-        print("Output: dist/OP-Z Sample Manager/")
+        print("Output: dist/OP-1Z Sample Manager/")
 
 
 if __name__ == "__main__":
