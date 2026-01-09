@@ -42,6 +42,12 @@ This is a Flask app built with PyQt5 to handle everything with samples on the OP
 
 This application includes the following third-party software:
 
+### Bootstrap
+This software uses [Bootstrap](https://getbootstrap.com/) v5.3.6 under the MIT License.
+
+### Lucide Icons
+This software uses [Lucide icons](https://lucide.dev/) under the ISC License.
+
 ### FFmpeg
 This software uses libraries from the [FFmpeg project](https://ffmpeg.org/) under the LGPLv2.1.
 FFmpeg source code is available at https://ffmpeg.org/download.html
