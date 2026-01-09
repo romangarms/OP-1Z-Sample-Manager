@@ -7,51 +7,6 @@ import webview
 
 FLASK_URL = "http://127.0.0.1:5000"
 
-LOADING_HTML = """
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body {
-            background-color: #1a1a1a;
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .loader { text-align: center; }
-        @-webkit-keyframes spin {
-            from { -webkit-transform: rotate(0deg); }
-            to { -webkit-transform: rotate(360deg); }
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #333;
-            border-top-color: #fff;
-            border-radius: 50%;
-            -webkit-animation: spin 1s linear infinite;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 16px;
-        }
-    </style>
-</head>
-<body>
-    <div class="loader">
-        <div class="spinner"></div>
-        <div>Loading...</div>
-    </div>
-</body>
-</html>
-"""
-
 
 def get_base_dir():
     if getattr(sys, 'frozen', False):
@@ -85,6 +40,13 @@ def on_loaded(window):
     threading.Thread(target=wait_for_flask_and_load, args=(window,), daemon=True).start()
 
 
+def load_loading_html():
+    """Load the loading screen HTML from file."""
+    loading_path = os.path.join(get_base_dir(), "loading.html")
+    with open(loading_path, "r") as f:
+        return f.read()
+
+
 if __name__ == "__main__":
     # Start Flask in background thread
     flask_thread = threading.Thread(target=start_flask, daemon=True)
@@ -94,7 +56,7 @@ if __name__ == "__main__":
     # and loading HTML (shown once WebView initializes)
     window = webview.create_window(
         title="OP-Z Sample Manager",
-        html=LOADING_HTML,
+        html=load_loading_html(),
         width=1280,
         height=720,
         background_color="#1a1a1a",  # Matches loading screen - no white flash
