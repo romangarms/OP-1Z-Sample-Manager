@@ -69,7 +69,7 @@ if sys.platform == 'win32':
         debug=False,
         bootloader_ignore_signals=False,
         strip=True,
-        upx=True,
+        upx=False,
         console=False,
         disable_windowed_traceback=False,
         target_arch=None,
