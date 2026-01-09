@@ -75,14 +75,17 @@ def convert_sample():
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, output_filename)
 
+    conversion_failed = False
     try:
         # Use shared conversion function
         convert_audio_file(input_path, output_path, sample_type)
         return jsonify({"message": f"Converted to {output_filename} successfully."})
     except subprocess.CalledProcessError as e:
+        conversion_failed = True
         current_app.logger.error(f"Subprocess Error: {e}")
         return jsonify({"error": "Conversion failed"}), 500
     except Exception as e:
+        conversion_failed = True
         current_app.logger.error("Unknown error while attempting to run the FFMPEG subprocess.")
         if os.name == "nt":
             current_app.logger.warning("Windows detected. This error is often due to a misconfigured FFMPEG path. Double check it.")
@@ -92,9 +95,11 @@ def convert_sample():
         # Clean up input file
         if os.path.exists(input_path):
             os.remove(input_path)
-            current_app.logger.info("Removed unconverted uploaded file")
-        else:
-            current_app.logger.warning("Did not find uploaded file and it was not removed")
+            current_app.logger.info("Removed uploaded temp file")
+        # Clean up failed output file
+        if conversion_failed and os.path.exists(output_path):
+            os.remove(output_path)
+            current_app.logger.info("Removed failed output file")
 
 # open the sample converter's converted folder in the file explorer
 @sample_converter_bp.route("/open-explorer", methods=["POST"])

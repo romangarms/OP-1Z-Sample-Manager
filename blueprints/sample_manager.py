@@ -373,6 +373,7 @@ def upload_sample():
         final_path = get_unique_filepath(final_path)
 
     temp_path = None
+    conversion_failed = False
 
     try:
         # OP-Z: Delete existing files in slot before uploading
@@ -397,14 +398,20 @@ def upload_sample():
         }, 200
 
     except subprocess.CalledProcessError as e:
+        conversion_failed = True
         current_app.logger.error(f"Conversion error: {e}")
         return {"error": "Audio conversion failed"}, 500
     except Exception as e:
+        conversion_failed = True
         current_app.logger.error(f"Upload error: {e}")
         return {"error": "File save failed"}, 500
     finally:
         if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
+        # Clean up failed output file
+        if conversion_failed and os.path.exists(final_path):
+            os.remove(final_path)
+            current_app.logger.info("Removed failed output file")
 
 @sample_manager_bp.route("/delete-sample", methods=["DELETE"])
 def delete_sample():
