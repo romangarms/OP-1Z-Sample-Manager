@@ -5,7 +5,7 @@ import html
 import werkzeug.utils
 import shutil
 from flask import Blueprint, request, jsonify, current_app, send_file
-from .config import get_device_mount_path
+from .config import get_config_setting, get_device_mount_path
 from .sample_converter import convert_audio_file, UPLOAD_FOLDER
 from .utils import get_unique_filepath, run_ffmpeg
 
