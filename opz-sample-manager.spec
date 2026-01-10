@@ -16,6 +16,7 @@ else:
 datas = [
     ('static', 'static'),
     ('templates', 'templates'),
+    ('THIRD_PARTY_LICENSES.md', '.'),
 ]
 
 # Collect hidden imports for Flask and related packages
