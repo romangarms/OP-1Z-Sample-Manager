@@ -204,7 +204,7 @@ def run_pyinstaller():
 
     print("Running PyInstaller...")
     result = subprocess.run(
-        [sys.executable, "-m", "PyInstaller", "--noupx", spec_file],
+        [sys.executable, "-m", "PyInstaller", spec_file],
         cwd=script_dir
     )
 
