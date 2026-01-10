@@ -9,7 +9,8 @@ from blueprints.sample_manager import sample_manager_bp
 from blueprints.tape_export import tape_export_bp
 from blueprints.dialogs import dialog_bp
 from blueprints.backup import backup_bp
-from blueprints.device_monitor import device_monitor_bp
+from blueprints.device_monitor import device_monitor_bp, initialize_device_monitor
+from blueprints.update_checker import update_checker_bp
 
 # Get base path for PyInstaller or normal execution
 if getattr(sys, 'frozen', False):
@@ -31,6 +32,7 @@ app.register_blueprint(config_bp)
 app.register_blueprint(dialog_bp)
 app.register_blueprint(backup_bp)
 app.register_blueprint(device_monitor_bp)
+app.register_blueprint(update_checker_bp)
 
 # run before server startup at the end of this file
 def app_startup_tasks():

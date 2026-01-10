@@ -70,7 +70,7 @@ if sys.platform == 'win32':
         name='OP-1Z Sample Manager',
         debug=False,
         bootloader_ignore_signals=False,
-        strip=True,
+        strip=False,
         upx=False,
         console=False,
         disable_windowed_traceback=False,
@@ -88,7 +88,7 @@ else:
         debug=False,
         bootloader_ignore_signals=False,
         strip=True,
-        upx=True,
+        upx=False,
         console=False,
         disable_windowed_traceback=False,
         argv_emulation=True,
@@ -103,8 +103,7 @@ else:
         a.zipfiles,
         a.datas,
         strip=True,
-        upx=True,
-        upx_exclude=[],
+        upx=False,
         name='OP-1Z Sample Manager',
     )
 
