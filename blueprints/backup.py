@@ -24,7 +24,7 @@ from .utils import (
 backup_bp = Blueprint('backup', __name__)
 
 # Cache directory for backup preview audio
-BACKUP_AUDIO_CACHE_DIR = os.path.join(tempfile.gettempdir(), "opz_sample_manager_backup_cache")
+BACKUP_AUDIO_CACHE_DIR = os.path.join(tempfile.gettempdir(), "op-1z_sample_manager_backup_cache")
 os.makedirs(BACKUP_AUDIO_CACHE_DIR, exist_ok=True)
 
 # Files/directories to ignore during backup

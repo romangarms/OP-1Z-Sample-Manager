@@ -1,8 +1,8 @@
-# op1z-sample-manager
+# OP-1Z Sample Manager
 
 **NEW: OP-1 Support Added! New Features!** Sample manager supports OP-1, plus tape track exporter and backup/restore feature
 
-This is a Flask app built with PyQt5 to handle everything with samples on the OP-Z. As time goes on, I'm adding more features around project management, export, and other various utilities.
+This is a Flask app built with PyQt5 to handle everything with samples on the OP-Z / OP-1. As time goes on, I'm adding more features around project management, export, and other various utilities.
 
 
 ### Run app using:

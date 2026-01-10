@@ -11,7 +11,7 @@ from .utils import run_ffmpeg
 sample_converter_bp = Blueprint('sample_converter', __name__)
 
 # Constants
-UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), "opz_sample_manager_uploads")
+UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), "op-1z_sample_manager_uploads")
 
 # Create upload directory
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -27,10 +27,10 @@ def get_converted_subfolder(sample_type):
     """Return converted subfolder path: WORKING_DIRECTORY/converted/{sample_type}/"""
     return os.path.join(get_converted_folder(), sample_type)
 
-# Helper function to convert audio files to OP-Z compatible format
+# Helper function to convert audio files to OP-Z / OP-1 compatible format
 def convert_audio_file(input_path, output_path, sample_type):
     """
-    Convert an audio file to OP-Z compatible AIFF format.
+    Convert an audio file to OP-Z / OP-1 compatible AIFF format.
 
     Args:
         input_path: Path to the input audio file
