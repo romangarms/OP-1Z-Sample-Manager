@@ -5,7 +5,7 @@ import html
 import werkzeug.utils
 import shutil
 from flask import Blueprint, request, jsonify, current_app, send_file
-from .config import get_device_mount_path
+from .config import get_config_setting, get_device_mount_path
 from .sample_converter import convert_audio_file, UPLOAD_FOLDER
 from .utils import get_unique_filepath, run_ffmpeg
 
@@ -373,7 +373,8 @@ def upload_sample():
         final_path = get_unique_filepath(final_path)
 
     temp_path = None
-    conversion_failed = False
+    converted_temp_path = None
+    upload_failed = False
 
     try:
         # OP-Z: Delete existing files in slot before uploading
@@ -386,7 +387,11 @@ def upload_sample():
         if needs_conversion:
             temp_path = os.path.join(UPLOAD_FOLDER, str(uuid.uuid4()) + "_" + original_filename)
             file.save(temp_path)
-            convert_audio_file(temp_path, final_path, sample_type)
+            # Convert to a temp file first, then copy to device
+            converted_temp_path = os.path.join(UPLOAD_FOLDER, str(uuid.uuid4()) + "_" + final_filename)
+            convert_audio_file(temp_path, converted_temp_path, sample_type)
+            # Copy converted file to device
+            shutil.copy2(converted_temp_path, final_path)
         else:
             file.save(final_path)
 
@@ -398,18 +403,24 @@ def upload_sample():
         }, 200
 
     except subprocess.CalledProcessError as e:
-        conversion_failed = True
+        upload_failed = True
         current_app.logger.error(f"Conversion error: {e}")
         return {"error": "Audio conversion failed"}, 500
+    except OSError as e:
+        upload_failed = True
+        current_app.logger.error(f"File placement error: {e}")
+        return {"error": "Failed to save file to device"}, 500
     except Exception as e:
-        conversion_failed = True
+        upload_failed = True
         current_app.logger.error(f"Upload error: {e}")
         return {"error": "File save failed"}, 500
     finally:
         if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
-        # Clean up failed output file
-        if conversion_failed and os.path.exists(final_path):
+        if converted_temp_path and os.path.exists(converted_temp_path):
+            os.remove(converted_temp_path)
+        # Clean up failed output file on device
+        if upload_failed and os.path.exists(final_path):
             os.remove(final_path)
             current_app.logger.info("Removed failed output file")
 
