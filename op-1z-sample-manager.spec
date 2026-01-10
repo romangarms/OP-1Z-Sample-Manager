@@ -17,6 +17,7 @@ datas = [
     ('static', 'static'),
     ('templates', 'templates'),
     ('THIRD_PARTY_LICENSES.md', '.'),
+    ('loading.html', '.'),
 ]
 
 # Collect hidden imports for Flask and related packages
