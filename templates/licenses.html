@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from 'macros.html' import nav_button %}
+
+{% block stylesheets %}
+<style>
+    .licenses-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .licenses-content {
+        background: var(--card-bg, #f8f9fa);
+        border: 1px solid var(--border-color, #dee2e6);
+        border-radius: 8px;
+        padding: 2rem;
+        font-family: monospace;
+        font-size: 0.9rem;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        line-height: 1.5;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+<title>Third-Party Licenses - OP-Z Sample Manager</title>
+{% endblock %}
+
+{% block main %}
+<h1>Third-Party Licenses</h1>
+<p class="page-description">Open-source software used in this application.</p>
+
+<div class="header-row">
+    {{ nav_button('/about', 'Back to About', icon='arrow-left') }}
+</div>
+
+<hr>
+
+<div class="licenses-container">
+    <div class="licenses-content">{{ content }}</div>
+</div>
+{% endblock %}

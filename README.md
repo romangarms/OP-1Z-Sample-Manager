@@ -1,8 +1,8 @@
-# op1z-sample-manager
+# OP-1Z Sample Manager
 
 **NEW: OP-1 Support Added! New Features!** Sample manager supports OP-1, plus tape track exporter and backup/restore feature
 
-This is a Flask app built with PyQt5 to handle everything with samples on the OP-Z. As time goes on, I'm adding more features around project management, export, and other various utilities.
+This is a Flask app built with PyQt5 to handle everything with samples on the OP-Z / OP-1. As time goes on, I'm adding more features around project management, export, and other various utilities.
 
 
 ### Run app using:
@@ -40,8 +40,4 @@ This is a Flask app built with PyQt5 to handle everything with samples on the OP
 
 ## Third-Party Licenses
 
-This application includes the following third-party software:
-
-### FFmpeg
-This software uses libraries from the [FFmpeg project](https://ffmpeg.org/) under the LGPLv2.1.
-FFmpeg source code is available at https://ffmpeg.org/download.html
+For a complete list of third-party licenses, see [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).

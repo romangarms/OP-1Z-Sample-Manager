@@ -8,18 +8,17 @@ from flask import Blueprint, request, jsonify, current_app
 config_bp = Blueprint('config', __name__)
 
 # Project name constant - change this when renaming the project
-PROJECT_NAME = "OP1Z-Sample-Manager"
+PROJECT_NAME = "OP-1Z-Sample-Manager"
 
 
 def get_config_dir():
     """Get the appropriate config directory for the current OS."""
     if sys.platform == 'darwin':
-        config_dir = os.path.expanduser('~/Library/Application Support/OP-Z Sample Manager')
+        config_dir = os.path.expanduser('~/Library/Application Support/OP-1Z Sample Manager')
     elif sys.platform == 'win32':
-        config_dir = os.path.join(os.environ.get('APPDATA', ''), 'OP-Z Sample Manager')
+        config_dir = os.path.join(os.environ.get('APPDATA', ''), 'OP-1Z Sample Manager')
     else:
-        config_dir = os.path.expanduser('~/.config/OP-Z Sample Manager')
-
+        config_dir = os.path.expanduser('~/.config/OP-1Z Sample Manager')
     # Create directory if it doesn't exist
     os.makedirs(config_dir, exist_ok=True)
     return config_dir
@@ -27,7 +26,7 @@ def get_config_dir():
 
 def get_config_path():
     """Get the full path to the config file."""
-    return os.path.join(get_config_dir(), 'opz_sm_config.json')
+    return os.path.join(get_config_dir(), 'op-1z_sm_config.json')
 
 
 CONFIG_PATH = get_config_path()

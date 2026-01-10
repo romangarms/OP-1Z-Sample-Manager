@@ -16,6 +16,8 @@ else:
 datas = [
     ('static', 'static'),
     ('templates', 'templates'),
+    ('THIRD_PARTY_LICENSES.md', '.'),
+    ('loading.html', '.'),
 ]
 
 # Collect hidden imports for Flask and related packages
@@ -65,7 +67,7 @@ if sys.platform == 'win32':
         a.zipfiles,
         a.datas,
         [],
-        name='OP-Z Sample Manager',
+        name='OP-1Z Sample Manager',
         debug=False,
         bootloader_ignore_signals=False,
         strip=True,
@@ -82,7 +84,7 @@ else:
         a.scripts,
         [],
         exclude_binaries=True,
-        name='OP-Z Sample Manager',
+        name='OP-1Z Sample Manager',
         debug=False,
         bootloader_ignore_signals=False,
         strip=True,
@@ -103,17 +105,17 @@ else:
         strip=True,
         upx=True,
         upx_exclude=[],
-        name='OP-Z Sample Manager',
+        name='OP-1Z Sample Manager',
     )
 
     app = BUNDLE(
         coll,
-        name='OP-Z Sample Manager.app',
+        name='OP-1Z Sample Manager.app',
         icon='static/favicon.png',
-        bundle_identifier='com.opz.samplemanager',
+        bundle_identifier='com.op-1z.samplemanager',
         info_plist={
-            'CFBundleName': 'OP-Z Sample Manager',
-            'CFBundleDisplayName': 'OP-Z Sample Manager',
+            'CFBundleName': 'OP-1Z Sample Manager',
+            'CFBundleDisplayName': 'OP-1Z Sample Manager',
             'CFBundleVersion': '1.0.0',
             'CFBundleShortVersionString': '1.0.0',
             'NSHighResolutionCapable': True,

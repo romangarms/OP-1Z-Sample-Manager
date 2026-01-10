@@ -28,7 +28,7 @@ from .utils import (
 tape_export_bp = Blueprint('tape_export', __name__)
 
 # Cache directory for converted audio files
-AUDIO_CACHE_DIR = os.path.join(tempfile.gettempdir(), "opz_sample_manager_audio_cache")
+AUDIO_CACHE_DIR = os.path.join(tempfile.gettempdir(), "op-1z_sample_manager_audio_cache")
 os.makedirs(AUDIO_CACHE_DIR, exist_ok=True)
 
 

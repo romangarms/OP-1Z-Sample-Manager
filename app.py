@@ -89,6 +89,17 @@ def backup():
 def about():
     return render_template("about.html")
 
+@app.route("/licenses")
+def licenses():
+    """Serve the third-party licenses page."""
+    licenses_path = os.path.join(BASE_DIR, 'THIRD_PARTY_LICENSES.md')
+    try:
+        with open(licenses_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return render_template("licenses.html", content=content)
+    except FileNotFoundError:
+        return render_template("licenses.html", content="Licenses file not found.")
+
 @app.route("/open-external-link")
 def open_external_link():
     url = request.args.get("url")

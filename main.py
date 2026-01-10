@@ -55,10 +55,10 @@ if __name__ == "__main__":
     # Create window with dark background color (shown before WebView loads)
     # and loading HTML (shown once WebView initializes)
     window = webview.create_window(
-        title="OP-Z Sample Manager",
+        title="OP-1Z Sample Manager",
         html=load_loading_html(),
         width=1280,
-        height=720,
+        height=800,
         background_color="#1a1a1a",  # Matches loading screen - no white flash
     )
 
