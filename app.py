@@ -9,7 +9,7 @@ from blueprints.sample_manager import sample_manager_bp
 from blueprints.tape_export import tape_export_bp
 from blueprints.dialogs import dialog_bp
 from blueprints.backup import backup_bp
-from blueprints.device_monitor import device_monitor_bp, initialize_device_monitor
+from blueprints.device_monitor import device_monitor_bp
 
 # Get base path for PyInstaller or normal execution
 if getattr(sys, 'frozen', False):
@@ -39,8 +39,8 @@ def app_startup_tasks():
     run_all_config_tasks()  # Initialize config settings
     # fetch and set the os config
     set_config_setting("OS", get_os())
-    # Initialize device monitoring (scan for connected devices, start USB monitoring)
-    initialize_device_monitor()
+    # Note: Device monitoring is initialized lazily when the homepage loads
+    # to avoid blocking app startup
 
 
 

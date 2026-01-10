@@ -19,13 +19,22 @@ device_monitor_bp = Blueprint('device_monitor', __name__)
 
 # Teenage Engineering USB Identifiers (decimal values)
 TE_VENDOR_ID = 9063         # 0x2367
-OPZ_PRODUCT_ID = 12         # 0x000c - USB Storage mode
+OPZ_PRODUCT_ID = 12         # 0x000c - OP-Z (both normal and disk mode use same ID)
 OP1_PRODUCT_ID = 2          # 0x0002 - USB Storage mode
 OP1_PRODUCT_ID_OTHER = 4    # 0x0004 - Normal/MIDI mode (no disk access)
 
+# USB class identifiers for distinguishing device modes
+USB_CLASS_STORAGE = "USBSTOR"  # Mass storage class
+USB_CLASS_MEDIA = "MEDIA"      # Audio/MIDI class (normal mode)
+
 
 def normalize_usb_id(value):
-    """Convert USB ID from any format (int, hex string, decimal string) to int."""
+    """Convert USB ID from any format (int, hex string, decimal string) to int.
+
+    On Windows, USB vendor/product IDs are reported as 4-character hex strings
+    without the '0x' prefix (e.g., '2367' for 0x2367). We detect this pattern
+    and parse as hex.
+    """
     if value is None:
         return None
     if isinstance(value, int):
@@ -37,11 +46,18 @@ def normalize_usb_id(value):
         # Try hex format (with 0x prefix)
         if value.startswith('0x'):
             return int(value, 16)
-        # Try as decimal string first
+        # USB IDs on Windows are typically 4-char hex strings (e.g., '2367', '000c')
+        # If it's exactly 4 chars and valid hex, treat as hex
+        if len(value) == 4:
+            try:
+                return int(value, 16)
+            except ValueError:
+                pass
+        # Try as decimal string
         try:
             return int(value)
         except ValueError:
-            # Assume hex without prefix
+            # Last resort: try as hex without prefix
             try:
                 return int(value, 16)
             except ValueError:
@@ -192,6 +208,7 @@ def update_device_status(device, connected, path=None, usb_detected=False, mode=
     # Only broadcast if status changed
     if old_status != new_status:
         device_name = "OP-1" if device == "op1" else "OP-Z"
+        print(f"Broadcasting SSE: {device_name} connected={connected}, path={path}, mode={mode}")
         broadcast_sse_event("device_status", {
             "device": device,
             "device_name": device_name,
@@ -229,7 +246,10 @@ def on_usb_connect(device_id, device_info):
             device_info.get("product_id")
         )
 
-        print(f"Normalized IDs - vendor: {vendor_id}, product: {product_id}")
+        # Get USB class to distinguish between storage and audio/MIDI modes
+        usb_class = device_info.get("ID_USB_CLASS_FROM_DATABASE", "")
+
+        print(f"Normalized IDs - vendor: {vendor_id}, product: {product_id}, class: {usb_class}")
 
         # Check if it's a Teenage Engineering device
         if vendor_id != TE_VENDOR_ID:
@@ -241,7 +261,12 @@ def on_usb_connect(device_id, device_info):
 
         if product_id == OPZ_PRODUCT_ID:
             device = "opz"
-            mode = "storage"
+            # OP-Z uses the same product ID for both modes, distinguish by USB class
+            # Storage mode shows as USBSTOR or USB, audio/MIDI mode shows as MEDIA
+            if usb_class == USB_CLASS_MEDIA:
+                mode = "other"  # Normal/MIDI mode - no disk access
+            else:
+                mode = "storage"
         elif product_id == OP1_PRODUCT_ID:
             device = "op1"
             mode = "storage"
@@ -352,10 +377,51 @@ def poll_for_mount_path(device, max_attempts=30, interval=1.0):
 
 def scan_for_connected_devices():
     """Scan for already-connected devices on startup."""
+    print("Scanning for connected devices...")
+
+    # First check for devices in storage mode (with mount paths)
     for device in ["opz", "op1"]:
         mount_path = find_device_mount(device)
+        print(f"  {device}: mount_path={mount_path}")
         if mount_path:
             update_device_status(device, connected=True, path=mount_path, usb_detected=True, mode="storage")
+
+    # Also scan for USB devices in normal/MIDI mode (no mount path)
+    try:
+        from usbmonitor import USBMonitor
+        monitor = USBMonitor()
+        devices = monitor.get_available_devices()
+
+        for device_id, device_info in devices.items():
+            vendor_id = normalize_usb_id(device_info.get("ID_VENDOR_ID"))
+            product_id = normalize_usb_id(device_info.get("ID_MODEL_ID"))
+            usb_class = device_info.get("ID_USB_CLASS_FROM_DATABASE", "")
+
+            if vendor_id != TE_VENDOR_ID:
+                continue
+
+            # Check for OP-Z in normal mode (MEDIA class)
+            if product_id == OPZ_PRODUCT_ID and usb_class == USB_CLASS_MEDIA:
+                # Only update if not already detected in storage mode
+                # Check status first, then call update outside the lock to avoid deadlock
+                with device_status_lock:
+                    already_connected = device_status["opz"]["connected"]
+                if not already_connected:
+                    print(f"Found OP-Z in normal mode on startup")
+                    update_device_status("opz", connected=True, path=None, usb_detected=True, mode="other")
+
+            # Check for OP-1 in normal/MIDI mode
+            elif product_id == OP1_PRODUCT_ID_OTHER:
+                with device_status_lock:
+                    already_connected = device_status["op1"]["connected"]
+                if not already_connected:
+                    print(f"Found OP-1 in normal mode on startup")
+                    update_device_status("op1", connected=True, path=None, usb_detected=True, mode="other")
+
+    except ImportError:
+        pass  # USBMonitor not available
+    except Exception as e:
+        print(f"Error scanning for USB devices: {e}")
 
 
 def start_usb_monitoring():
@@ -395,8 +461,21 @@ def stop_usb_monitoring():
             print(f"Error stopping USB monitoring: {e}")
 
 
+device_monitor_initialized = False
+device_monitor_init_lock = threading.Lock()
+
+
 def initialize_device_monitor():
-    """Initialize device monitoring on app startup."""
+    """Initialize device monitoring (called lazily when homepage loads)."""
+    global device_monitor_initialized
+
+    with device_monitor_init_lock:
+        if device_monitor_initialized:
+            return  # Already initialized
+        device_monitor_initialized = True
+
+    print("Initializing device monitor...")
+
     # Scan for devices already connected
     scan_for_connected_devices()
 
@@ -409,6 +488,9 @@ def initialize_device_monitor():
 @device_monitor_bp.route('/device-status')
 def get_device_status():
     """Get current status of both devices."""
+    # Initialize device monitoring lazily on first request
+    initialize_device_monitor()
+
     with device_status_lock:
         status = {
             "opz": device_status["opz"].copy(),
@@ -425,6 +507,8 @@ def get_device_status():
 @device_monitor_bp.route('/device-events')
 def device_events():
     """SSE endpoint for real-time device status updates."""
+    # Initialize device monitoring lazily on first request
+    initialize_device_monitor()
 
     def generate():
         # Create a queue for this client
