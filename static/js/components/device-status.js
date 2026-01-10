@@ -9,6 +9,11 @@ const deviceStatus = {
     eventSource: null,
     isFirstLoad: true,
     initialDevices: { opz: null, op1: null },
+    // Track current device state for click handling
+    currentState: {
+        opz: { connected: false, mode: null, path: null },
+        op1: { connected: false, mode: null, path: null }
+    },
 
     /**
      * Initialize SSE connection for device status updates
@@ -89,6 +94,9 @@ const deviceStatus = {
      */
     handleDeviceStatus: function(data) {
         const { device, device_name, connected, path, usb_detected, mode } = data;
+
+        // Update current state for click handling
+        this.currentState[device] = { connected, mode, path };
 
         // Track initial state to avoid duplicate toasts on first load
         if (this.isFirstLoad) {
@@ -200,11 +208,82 @@ const deviceStatus = {
 
     /**
      * Open device directory in system file manager
+     * If device is not in storage mode, shows instructions modal instead
      */
     openDeviceDirectory: function(device) {
+        const state = this.currentState[device];
+        const deviceName = device === 'op1' ? 'OP-1' : 'OP-Z';
+
+        // If not connected or not in storage mode with path, show instructions
+        if (!state.connected || state.mode !== 'storage' || !state.path) {
+            this.showDiskModeModal(device, deviceName, state.connected, state.mode);
+            return;
+        }
+
+        // Device is in storage mode with valid path - open directory
         fetch(`/open-device-directory?device=${device}`)
             .then(res => res.json())
             .catch(err => console.error('Error opening device directory:', err));
+    },
+
+    /**
+     * Show modal with instructions for switching to disk mode
+     */
+    showDiskModeModal: function(device, deviceName, connected, mode) {
+        const modalEl = document.getElementById('diskModeModal');
+        const titleEl = document.getElementById('diskModeModalTitle');
+        const bodyEl = document.getElementById('diskModeModalBody');
+
+        if (!modalEl || !titleEl || !bodyEl) return;
+
+        titleEl.textContent = `${deviceName} - Switch to Disk Mode`;
+
+        let instructions = '';
+
+        if (!connected) {
+            instructions = `
+                <p>Your <strong>${deviceName}</strong> is not currently connected.</p>
+                <p>Connect your device via USB and switch it to disk mode to access files.</p>
+            `;
+        } else if (mode === 'other') {
+            instructions = `
+                <p>Your <strong>${deviceName}</strong> is connected but not in disk mode.</p>
+                <p>To access files, you need to switch to disk mode:</p>
+            `;
+        } else {
+            instructions = `
+                <p>Your <strong>${deviceName}</strong> is connected but the mount path is not available yet.</p>
+                <p>Please wait a moment for the device to finish mounting.</p>
+            `;
+        }
+
+        // Add device-specific instructions
+        if (device === 'opz') {
+            instructions += `
+                <div class="disk-mode-steps">
+                    <h6>OP-Z Disk Mode:</h6>
+                    <ol>
+                        <li>Power off the device</li>
+                        <li>Hold <strong>TRACK</strong> and turn the yellow volume knob power on the device</li>
+                        <li>Wait for the OP-Z to switch modes and connect</li>
+                    </ol>
+                </div>
+            `;
+        } else if (device === 'op1') {
+            instructions += `
+                <div class="disk-mode-steps">
+                    <h6>OP-1 Disk Mode:</h6>
+                    <ol>
+                        <li>Press <strong>COM</strong> (shift + mixer)</li>
+                        <li>Press the track 3 button to select <strong>disk</strong></li>
+                        <li>Wait for the OP-1 to switch modes and reconnect</li>
+                    </ol>
+                </div>
+            `;
+        }
+
+        bodyEl.innerHTML = instructions;
+        new bootstrap.Modal(modalEl).show();
     },
 
     /**
@@ -213,7 +292,27 @@ const deviceStatus = {
     getStatus: async function() {
         try {
             const response = await fetch('/device-status');
-            return await response.json();
+            const status = await response.json();
+
+            // Update current state for click handling
+            if (status) {
+                if (status.opz) {
+                    this.currentState.opz = {
+                        connected: status.opz.connected,
+                        mode: status.opz.mode,
+                        path: status.opz.path
+                    };
+                }
+                if (status.op1) {
+                    this.currentState.op1 = {
+                        connected: status.op1.connected,
+                        mode: status.op1.mode,
+                        path: status.op1.path
+                    };
+                }
+            }
+
+            return status;
         } catch (e) {
             console.error('Error fetching device status:', e);
             return null;
