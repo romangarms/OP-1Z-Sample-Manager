@@ -40,8 +40,4 @@ This is a Flask app built with PyQt5 to handle everything with samples on the OP
 
 ## Third-Party Licenses
 
-This application includes the following third-party software:
-
-### FFmpeg
-This software uses libraries from the [FFmpeg project](https://ffmpeg.org/) under the LGPLv2.1.
-FFmpeg source code is available at https://ffmpeg.org/download.html
+For a complete list of third-party licenses, see [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
