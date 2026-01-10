@@ -58,7 +58,7 @@ if __name__ == "__main__":
         title="OP-1Z Sample Manager",
         html=load_loading_html(),
         width=1280,
-        height=720,
+        height=800,
         background_color="#1a1a1a",  # Matches loading screen - no white flash
     )
 
