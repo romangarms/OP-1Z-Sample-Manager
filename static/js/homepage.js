@@ -4,6 +4,15 @@
  * Handles device sidebar updates and other home page functionality.
  */
 
+// Track scanning state for each device (after disconnect, scan for 30 sec)
+const deviceScanningState = {
+    opz: { scanning: false, timeout: null, previousMode: null },
+    op1: { scanning: false, timeout: null, previousMode: null }
+};
+
+// How long to show "scanning" after a device disconnects (ms)
+const SCANNING_DURATION = 30000;
+
 /**
  * Load sidebar state from config and check device status
  */
@@ -81,6 +90,70 @@ function expandSidebar() {
 }
 
 /**
+ * Start scanning state for a device (shows pulsing indicator for 30 sec)
+ */
+function startDeviceScanning(device) {
+    const state = deviceScanningState[device];
+    if (!state) return;
+
+    // Clear any existing timeout
+    if (state.timeout) {
+        clearTimeout(state.timeout);
+    }
+
+    state.scanning = true;
+
+    // Update UI to show scanning
+    const indicator = document.getElementById(`${device}-indicator`);
+    const statusText = document.getElementById(`${device}-status-text`);
+    const pathText = document.getElementById(`${device}-path-text`);
+
+    if (indicator) {
+        indicator.classList.remove('connected', 'disconnected');
+        indicator.classList.add('scanning');
+    }
+    if (statusText) {
+        statusText.textContent = 'Scanning...';
+    }
+    if (pathText) {
+        pathText.textContent = '';
+        pathText.classList.remove('mode-hint');
+    }
+
+    // Stop scanning after duration
+    state.timeout = setTimeout(() => {
+        stopDeviceScanning(device);
+    }, SCANNING_DURATION);
+}
+
+/**
+ * Stop scanning state for a device
+ */
+function stopDeviceScanning(device) {
+    const state = deviceScanningState[device];
+    if (!state) return;
+
+    if (state.timeout) {
+        clearTimeout(state.timeout);
+        state.timeout = null;
+    }
+
+    state.scanning = false;
+
+    // If device is still not connected, show disconnected state
+    const indicator = document.getElementById(`${device}-indicator`);
+    const statusText = document.getElementById(`${device}-status-text`);
+
+    if (indicator && indicator.classList.contains('scanning')) {
+        indicator.classList.remove('scanning');
+        indicator.classList.add('disconnected');
+    }
+    if (statusText && statusText.textContent === 'Scanning...') {
+        statusText.textContent = 'Not connected';
+    }
+}
+
+/**
  * Update device sidebar card with current status
  */
 function updateDeviceSidebar(device, connected, path, mode) {
@@ -93,38 +166,69 @@ function updateDeviceSidebar(device, connected, path, mode) {
         return;
     }
 
+    const state = deviceScanningState[device];
+
+    // If device connects, stop any scanning state
+    if (connected) {
+        stopDeviceScanning(device);
+    }
+
+    // Track mode for detecting mode switches
+    const previousMode = state ? state.previousMode : null;
+    if (state) {
+        state.previousMode = mode;
+    }
+
     if (connected && mode === 'storage' && path) {
         // Storage mode with path - fully connected
-        indicator.classList.remove('disconnected');
+        indicator.classList.remove('disconnected', 'scanning', 'wrong-mode');
         indicator.classList.add('connected');
-        statusText.textContent = 'Connected';
+        statusText.textContent = 'Connected in disk mode';
         pathText.textContent = path;
         pathText.classList.remove('mode-hint');
         card.classList.remove('disabled');
+    } else if (connected && mode === 'upgrade') {
+        // Upgrade mode - device is in firmware update mode
+        indicator.classList.remove('disconnected', 'scanning', 'connected');
+        indicator.classList.add('wrong-mode');
+        statusText.textContent = 'Connected in upgrade mode';
+        pathText.textContent = 'Switch to disk mode for file access';
+        pathText.classList.add('mode-hint');
+        card.classList.add('disabled');
     } else if (connected && mode === 'other') {
         // Non-storage mode (MIDI/normal) - connected but no disk access
-        indicator.classList.remove('disconnected');
-        indicator.classList.add('connected');
-        statusText.textContent = 'Connected';
-        pathText.textContent = 'Switch to disk mode';
+        indicator.classList.remove('disconnected', 'scanning', 'connected');
+        indicator.classList.add('wrong-mode');
+        statusText.textContent = 'Connected in standalone mode';
+        pathText.textContent = 'Switch to disk mode for file access';
         pathText.classList.add('mode-hint');
         card.classList.add('disabled');
     } else if (connected && mode === 'storage' && !path) {
         // Storage mode but path not found yet
-        indicator.classList.remove('disconnected');
+        indicator.classList.remove('disconnected', 'scanning', 'wrong-mode');
         indicator.classList.add('connected');
-        statusText.textContent = 'Connected';
+        statusText.textContent = 'Connected in disk mode';
         pathText.textContent = 'Mounting...';
         pathText.classList.remove('mode-hint');
         card.classList.add('disabled');
     } else {
-        // Not connected
-        indicator.classList.remove('connected');
-        indicator.classList.add('disconnected');
-        statusText.textContent = 'Not connected';
-        pathText.textContent = '';
-        pathText.classList.remove('mode-hint');
-        card.classList.add('disabled');
+        // Not connected - check if we should show scanning state
+        // Start scanning if device was previously connected (mode switch scenario)
+        if (previousMode !== null && state && !state.scanning) {
+            startDeviceScanning(device);
+            card.classList.add('disabled');
+        } else if (state && state.scanning) {
+            // Already scanning, keep that state
+            card.classList.add('disabled');
+        } else {
+            // Normal disconnected state
+            indicator.classList.remove('connected', 'scanning', 'wrong-mode');
+            indicator.classList.add('disconnected');
+            statusText.textContent = 'Not connected';
+            pathText.textContent = '';
+            pathText.classList.remove('mode-hint');
+            card.classList.add('disabled');
+        }
     }
 }
 

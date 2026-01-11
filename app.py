@@ -41,8 +41,8 @@ def app_startup_tasks():
     run_all_config_tasks()  # Initialize config settings
     # fetch and set the os config
     set_config_setting("OS", get_os())
-    # Initialize device monitoring (scan for connected devices, start USB monitoring)
-    initialize_device_monitor()
+    # Note: Device monitoring is initialized lazily when the homepage loads
+    # to avoid blocking app startup
 
 
 

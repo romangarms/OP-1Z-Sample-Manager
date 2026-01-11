@@ -482,3 +482,34 @@ h3 {
     transition: width 0.3s ease;
     border-radius: 10px;
 }
+
+/* ===========================================
+   Disk Mode Instructions Modal
+   =========================================== */
+
+.disk-mode-steps {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: var(--offwhite);
+    border-radius: 8px;
+}
+
+.disk-mode-steps h6 {
+    margin: 0 0 0.75rem 0;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.disk-mode-steps ol {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.disk-mode-steps li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.disk-mode-steps li:last-child {
+    margin-bottom: 0;
+}

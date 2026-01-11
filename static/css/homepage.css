@@ -162,8 +162,29 @@ body > .container {
     box-shadow: 0 0 6px var(--first-color);
 }
 
+.status-indicator.wrong-mode {
+    background-color: var(--third-color);
+    box-shadow: 0 0 6px var(--third-color);
+}
+
 .status-indicator.disconnected {
     background-color: var(--neutral-gray);
+}
+
+.status-indicator.scanning {
+    background-color: var(--third-color);
+    animation: pulse-scanning 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-scanning {
+    0%, 100% {
+        opacity: 0.4;
+        box-shadow: 0 0 2px var(--third-color);
+    }
+    50% {
+        opacity: 1;
+        box-shadow: 0 0 8px var(--third-color);
+    }
 }
 
 .device-name {
@@ -196,6 +217,8 @@ body > .container {
     font-style: italic;
     opacity: 1;
     color: var(--text-color);
+    word-break: normal;
+    overflow-wrap: break-word;
 }
 
 /* Main content area */
