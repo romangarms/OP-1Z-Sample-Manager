@@ -171,6 +171,11 @@ body > .container {
     background-color: var(--neutral-gray);
 }
 
+.status-indicator.standby {
+    background-color: var(--fourth-color);
+    box-shadow: 0 0 6px var(--fourth-color);
+}
+
 .status-indicator.scanning {
     background-color: var(--third-color);
     animation: pulse-scanning 1.5s ease-in-out infinite;

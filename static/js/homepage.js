@@ -181,7 +181,7 @@ function updateDeviceSidebar(device, connected, path, mode) {
 
     if (connected && mode === 'storage' && path) {
         // Storage mode with path - fully connected
-        indicator.classList.remove('disconnected', 'scanning', 'wrong-mode');
+        indicator.classList.remove('disconnected', 'scanning', 'wrong-mode', 'standby');
         indicator.classList.add('connected');
         statusText.textContent = 'Connected in disk mode';
         pathText.textContent = path;
@@ -189,15 +189,23 @@ function updateDeviceSidebar(device, connected, path, mode) {
         card.classList.remove('disabled');
     } else if (connected && mode === 'upgrade') {
         // Upgrade mode - device is in firmware update mode
-        indicator.classList.remove('disconnected', 'scanning', 'connected');
+        indicator.classList.remove('disconnected', 'scanning', 'connected', 'standby');
         indicator.classList.add('wrong-mode');
         statusText.textContent = 'Connected in upgrade mode';
         pathText.textContent = 'Switch to disk mode for file access';
         pathText.classList.add('mode-hint');
         card.classList.add('disabled');
+    } else if (connected && mode === 'standby') {
+        // Standby mode - device is connected but powered off
+        indicator.classList.remove('connected', 'scanning', 'wrong-mode', 'disconnected');
+        indicator.classList.add('standby');
+        statusText.textContent = 'Device off';
+        pathText.textContent = 'Power on device for access';
+        pathText.classList.add('mode-hint');
+        card.classList.add('disabled');
     } else if (connected && mode === 'other') {
         // Non-storage mode (MIDI/normal) - connected but no disk access
-        indicator.classList.remove('disconnected', 'scanning', 'connected');
+        indicator.classList.remove('disconnected', 'scanning', 'connected', 'standby');
         indicator.classList.add('wrong-mode');
         statusText.textContent = 'Connected in standalone mode';
         pathText.textContent = 'Switch to disk mode for file access';
@@ -205,7 +213,7 @@ function updateDeviceSidebar(device, connected, path, mode) {
         card.classList.add('disabled');
     } else if (connected && mode === 'storage' && !path) {
         // Storage mode but path not found yet
-        indicator.classList.remove('disconnected', 'scanning', 'wrong-mode');
+        indicator.classList.remove('disconnected', 'scanning', 'wrong-mode', 'standby');
         indicator.classList.add('connected');
         statusText.textContent = 'Connected in disk mode';
         pathText.textContent = 'Mounting...';
@@ -222,7 +230,7 @@ function updateDeviceSidebar(device, connected, path, mode) {
             card.classList.add('disabled');
         } else {
             // Normal disconnected state
-            indicator.classList.remove('connected', 'scanning', 'wrong-mode');
+            indicator.classList.remove('connected', 'scanning', 'wrong-mode', 'standby');
             indicator.classList.add('disconnected');
             statusText.textContent = 'Not connected';
             pathText.textContent = '';

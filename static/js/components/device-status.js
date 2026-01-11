@@ -220,6 +220,14 @@ const deviceStatus = {
                 `Device connected: ${deviceName}`,
                 { duration: 5000 }
             );
+        } else if (mode === 'standby') {
+            // Device is connected but powered off
+            message = 'Device is off - power on for access';
+            toastElement = toast.info(
+                message,
+                `Device connected: ${deviceName}`,
+                { duration: 5000 }
+            );
         } else if (mode === 'other') {
             // Non-storage mode (MIDI/normal) - no disk access
             message = 'Switch to disk mode for file access';
@@ -304,6 +312,12 @@ const deviceStatus = {
                 <p>Your <strong>${deviceName}</strong> is in <strong>upgrade mode</strong>.</p>
                 <p>This mode is used for firmware updates. To access samples, you need to switch to disk mode:</p>
             `;
+        } else if (mode === 'standby') {
+            titleEl.textContent = `${deviceName} - Device Off`;
+            instructions = `
+                <p>Your <strong>${deviceName}</strong> is connected but powered off.</p>
+                <p>Power on the device and switch to disk mode to access files:</p>
+            `;
         } else if (mode === 'other') {
             instructions = `
                 <p>Your <strong>${deviceName}</strong> is connected but not in disk mode.</p>
@@ -323,7 +337,7 @@ const deviceStatus = {
                     <h6>OP-Z Disk Mode:</h6>
                     <ol>
                         <li>Power off the device</li>
-                        <li>Hold <strong>TRACK</strong> and turn the yellow volume knob power on the device</li>
+                        <li>Hold <strong>TRACK</strong> and turn the <strong>yellow volume knob</strong> to power on the device</li>
                         <li>Wait for the OP-Z to switch modes and connect</li>
                     </ol>
                 </div>

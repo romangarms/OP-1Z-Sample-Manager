@@ -68,7 +68,7 @@ def normalize_usb_id(value):
     return None
 
 # Device status tracking
-# mode: "storage" (disk accessible), "other" (MIDI/normal mode), or None
+# mode: "storage" (disk accessible), "other" (MIDI/normal mode), "standby" (connected but off), or None
 device_status = {
     "opz": {"connected": False, "path": None, "usb_detected": False, "mode": None},
     "op1": {"connected": False, "path": None, "usb_detected": False, "mode": None}
@@ -306,11 +306,13 @@ def on_usb_connect(device_id, device_info):
         if product_id == OPZ_PRODUCT_ID:
             device = "opz"
             # OP-Z uses the same product ID for both modes, distinguish by USB class
-            # Storage mode shows as USBSTOR or USB, audio/MIDI mode shows as MEDIA
+            # - MEDIA class = Normal/MIDI mode (device is ON)
+            # - Other class without mount = Standby mode (device is OFF but connected)
+            # - Other class with mount = Storage/disk mode
             if usb_class == USB_CLASS_MEDIA:
                 mode = "other"  # Normal/MIDI mode - no disk access
             else:
-                mode = "storage"
+                mode = "pending_storage"  # Will be resolved to "storage" or "standby"
         elif product_id == OP1_PRODUCT_ID:
             device = "op1"
             mode = "storage"
@@ -323,7 +325,7 @@ def on_usb_connect(device_id, device_info):
 
         print(f"Detected Teenage Engineering {device.upper()} in {mode} mode")
 
-        if mode == "storage":
+        if mode == "storage" or mode == "pending_storage":
             # Storage mode - try to find mount path
             # Wait a bit for the device to mount
             time.sleep(1.5)
@@ -333,8 +335,14 @@ def on_usb_connect(device_id, device_info):
             if mount_path:
                 print(f"Found mount path: {mount_path} (mode: {detected_mode})")
                 update_device_status(device, connected=True, path=mount_path, usb_detected=True, mode=detected_mode)
+            elif mode == "pending_storage":
+                # OP-Z: No mount path found - device is likely off (standby mode)
+                # Start polling but set initial state to standby
+                print(f"No mount path for {device}, device appears to be in standby mode")
+                update_device_status(device, connected=True, path=None, usb_detected=True, mode="standby")
+                poll_for_mount_path(device)
             else:
-                # USB detected but mount path not found yet - start polling
+                # OP-1 or other: USB detected but mount path not found yet - start polling
                 print(f"Mount path not found for {device}, starting background polling...")
                 update_device_status(device, connected=True, path=None, usb_detected=True, mode="storage")
                 poll_for_mount_path(device)
@@ -444,15 +452,19 @@ def scan_for_connected_devices():
             if vendor_id != TE_VENDOR_ID:
                 continue
 
-            # Check for OP-Z in normal mode (MEDIA class)
-            if product_id == OPZ_PRODUCT_ID and usb_class == USB_CLASS_MEDIA:
-                # Only update if not already detected in storage mode
-                # Check status first, then call update outside the lock to avoid deadlock
+            # Check for OP-Z
+            if product_id == OPZ_PRODUCT_ID:
                 with device_status_lock:
                     already_connected = device_status["opz"]["connected"]
                 if not already_connected:
-                    print(f"Found OP-Z in normal mode on startup")
-                    update_device_status("opz", connected=True, path=None, usb_detected=True, mode="other")
+                    if usb_class == USB_CLASS_MEDIA:
+                        # OP-Z in normal mode (device is ON)
+                        print(f"Found OP-Z in normal mode on startup")
+                        update_device_status("opz", connected=True, path=None, usb_detected=True, mode="other")
+                    else:
+                        # OP-Z with non-MEDIA class and no mount = standby mode (device is OFF)
+                        print(f"Found OP-Z in standby mode on startup (connected but off)")
+                        update_device_status("opz", connected=True, path=None, usb_detected=True, mode="standby")
 
             # Check for OP-1 in normal/MIDI mode
             elif product_id == OP1_PRODUCT_ID_OTHER:
