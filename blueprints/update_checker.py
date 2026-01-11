@@ -47,13 +47,13 @@ def display_update_notice():
         "github_version": "unknown"
     }
 
-    if get_config_setting('update_checker_disable', False):
+    if get_config_setting('UPDATE_CHECKER_DISABLED', False):
         response_data["github_version"] = "checking_disabled"
         return jsonify(response_data)
     
     # Check if enough time has passed since last notification
-    last_shown = get_config_setting('update_notice_last_shown')
-    cooldown_seconds = get_config_setting('update_notice_cooldown_seconds', 3600)  # Default 1 hour
+    last_shown = get_config_setting('UPDATE_NOTICE_LAST_SHOWN')
+    cooldown_seconds = get_config_setting('UPDATE_NOTICE_COOLDOWN_SECONDS', 3600)  # Default 1 hour
     
     if last_shown:
         try:
@@ -69,14 +69,14 @@ def display_update_notice():
     latest_tag = get_latest_tag()
     response_data["github_version"] = latest_tag
 
-    ignored_version = get_config_setting('update_checker_ignored_version')
+    ignored_version = get_config_setting('UPDATE_CHECKER_IGNORED_VERSION')
     if (ignored_version is not None) and (ignored_version == response_data["github_version"]):
         return jsonify(response_data)
     
     if response_data["github_version"] != 'unknown' and response_data["github_version"] != APP_VERSION:
         response_data["display_update_notice"] = True
         # Store the current time as the last shown time
-        set_config_setting('update_notice_last_shown', datetime.now().isoformat())
+        set_config_setting('UPDATE_NOTICE_LAST_SHOWN', datetime.now().isoformat())
 
     return jsonify(response_data)
 
