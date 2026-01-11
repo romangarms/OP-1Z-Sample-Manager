@@ -9,10 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(function(data) {
             var version = (data && data.app_version) ? data.app_version : 'unknown';
             codeEl.textContent = version;
-            if (loadingEl) loadingEl.style.display = 'none';
         })
         .catch(function() {
             codeEl.textContent = 'unknown';
-            if (loadingEl) loadingEl.style.display = 'none';
         });
 });
