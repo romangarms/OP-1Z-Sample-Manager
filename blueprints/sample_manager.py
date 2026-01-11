@@ -150,9 +150,16 @@ def validate_full_path(full_path, allowed_base):
     normalized_path = os.path.normpath(os.path.abspath(full_path))
     normalized_base = os.path.normpath(os.path.abspath(allowed_base))
 
+    # Handle Windows drive roots (e.g., "F:\") - they end with backslash after normpath
+    # so we don't need to add another separator
+    if normalized_base.endswith(os.sep):
+        prefix = normalized_base
+    else:
+        prefix = normalized_base + os.sep
+
     # Validate path is within allowed base
     if not (normalized_path == normalized_base or
-            normalized_path.startswith(normalized_base + os.sep)):
+            normalized_path.startswith(prefix)):
         return False, None, "Path is outside allowed directory"
 
     return True, normalized_path, None
