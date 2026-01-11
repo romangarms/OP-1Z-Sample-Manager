@@ -45,11 +45,29 @@ function setupDragDrop(id, type) {
     });
 }
 
+function showConvertingProgress(current, total, filename) {
+    const overlay = document.getElementById('converting-overlay');
+    const status = document.getElementById('converting-status');
+    const progress = document.getElementById('converting-progress');
+
+    overlay.classList.remove('hidden');
+    status.textContent = `Converting ${current} of ${total}: ${filename}`;
+    progress.style.width = `${(current / total) * 100}%`;
+}
+
+function hideConvertingProgress() {
+    document.getElementById('converting-overlay').classList.add('hidden');
+    document.getElementById('converting-progress').style.width = '0%';
+}
+
 async function handleFiles(files, type) {
-
     const results = [];
+    const total = files.length;
 
-    for (const file of files) {
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        showConvertingProgress(i + 1, total, file.name);
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', type); // "drum" or "synth"
@@ -71,6 +89,8 @@ async function handleFiles(files, type) {
             results.push(`${file.name}: Error - ${err.message}`);
         }
     }
+
+    hideConvertingProgress();
 
     // Show results as toast
     const successCount = results.filter(r => r.includes('Success') || r.includes('Converted')).length;
@@ -95,6 +115,31 @@ function openExplorer() {
         .catch(err => {
             console.error("Error:", err);
         });
+}
+
+function deleteAllConverted() {
+    showConfirmModal(
+        'Delete All Converted Samples',
+        'Are you sure you want to delete all converted samples? This cannot be undone.',
+        () => {
+            fetch("/delete-all-converted", { method: "DELETE" })
+                .then(response => {
+                    if (!response.ok) throw new Error("Request failed");
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.count === 0) {
+                        toast.info('No files to delete', 'Folder Empty');
+                    } else {
+                        toast.success(`Deleted ${data.count} file(s)`, 'Samples Deleted');
+                    }
+                })
+                .catch(err => {
+                    toast.error('Failed to delete samples');
+                    console.error("Error:", err);
+                });
+        }
+    );
 }
 
 document.addEventListener('DOMContentLoaded', () => {

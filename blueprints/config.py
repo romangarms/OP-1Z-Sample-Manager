@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import logging
+import subprocess
 from flask import Blueprint, request, jsonify, current_app
 
 # Create Blueprint for config routes
@@ -241,6 +242,29 @@ def reset_config_flask():
     delete_config_setting("OPZ_MOUNT_PATH", save=False)
     reset_config()
     return jsonify({"success": True, "message": "Configuration reset successfully"})
+
+
+@config_bp.route('/open-config-in-editor', methods=['POST'])
+def open_config_in_editor():
+    """Open the config file in the system's default text editor."""
+    config_path = get_config_path()
+
+    # Ensure the config file exists
+    if not os.path.exists(config_path):
+        # Create an empty config file if it doesn't exist
+        write_json_to_path(config_path, {})
+
+    try:
+        if sys.platform.startswith("win"):
+            os.startfile(config_path)
+        elif sys.platform.startswith("darwin"):
+            subprocess.Popen(["open", config_path])
+        else:  # Linux and others
+            subprocess.Popen(["xdg-open", config_path])
+
+        return jsonify({"status": "opened", "path": config_path}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Flask routes to edit config files on the OP-Z device
 @config_bp.route('/get-config/general')

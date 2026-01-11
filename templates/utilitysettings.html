@@ -15,6 +15,10 @@
 
 <div class="header-row">
     {{ nav_button('/', 'Home', icon='home') }}
+    <button onclick="openConfigInEditor()" class="nav-btn nav-btn-secondary">
+        <i data-lucide="file-pen-line"></i>
+        Open Config in Editor
+    </button>
     <button onclick="resetConfig()" class="nav-btn nav-btn-danger">
         <i data-lucide="rotate-ccw"></i>
         Reset Config

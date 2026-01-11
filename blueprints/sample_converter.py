@@ -3,6 +3,7 @@ import sys
 import subprocess
 import tempfile
 import uuid
+import shutil
 from flask import Blueprint, request, jsonify, current_app
 from .config import get_config_setting
 from .utils import run_ffmpeg
@@ -116,4 +117,32 @@ def open_explorer():
 
         return jsonify({"status": "opened", "path": folder_path}), 200
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@sample_converter_bp.route("/delete-all-converted", methods=["DELETE"])
+def delete_all_converted():
+    """Delete all converted samples from the converted folder."""
+    folder_path = get_converted_folder()
+
+    if not os.path.exists(folder_path):
+        return jsonify({"status": "deleted", "count": 0}), 200
+
+    try:
+        # Count files before deletion
+        file_count = 0
+        for root, dirs, files in os.walk(folder_path):
+            file_count += len(files)
+
+        # Delete contents of folder but keep the folder itself
+        for item in os.listdir(folder_path):
+            item_path = os.path.join(folder_path, item)
+            if os.path.isdir(item_path):
+                shutil.rmtree(item_path)
+            else:
+                os.remove(item_path)
+
+        return jsonify({"status": "deleted", "count": file_count}), 200
+    except Exception as e:
+        current_app.logger.error(f"Error deleting converted samples: {e}")
         return jsonify({"error": str(e)}), 500

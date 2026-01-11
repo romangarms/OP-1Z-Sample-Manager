@@ -13,6 +13,23 @@ function resetConfig() {
     });
 }
 
+function openConfigInEditor() {
+  fetch('/open-config-in-editor', {
+    method: 'POST'
+  })
+    .then(response => {
+      if (!response.ok) throw new Error("Request failed");
+      return response.json();
+    })
+    .then(data => {
+      toast.success('Config file opened', 'Editor Launched');
+    })
+    .catch(error => {
+      toast.error('Failed to open config file');
+      console.error(error);
+    });
+}
+
 function openPathPicker(endpoint, inputId, infoId, configOption, autoSet = false) {
   // autoSet determines if this will automatically send the path it gets off to the flask server to set & save the config option - defaults to false
   fetch(endpoint)

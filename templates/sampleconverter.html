@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import nav_button %}
+{% from 'macros.html' import nav_button, loading_overlay_progress %}
 
 {%block stylesheets %}
 <link rel="stylesheet" href="/static/css/sampleconverter.css">
@@ -18,6 +18,10 @@
     <button onclick="openExplorer()" class="nav-btn nav-btn-secondary">
         <i data-lucide="folder-open"></i>
         Open Converted
+    </button>
+    <button onclick="deleteAllConverted()" class="nav-btn nav-btn-danger">
+        <i data-lucide="trash-2"></i>
+        Delete All Converted
     </button>
 </div>
 
@@ -45,6 +49,7 @@
     </div>
 </div>
 
+{{ loading_overlay_progress(id='converting', title='Converting Samples', message='Please wait...') }}
 
 <script src="/static/js/sampleconverter.js"></script>
 
