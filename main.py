@@ -4,6 +4,7 @@ import threading
 import time
 import urllib.request
 import webview
+from blueprints.github_version_file import VERSION as APP_VERSION
 
 FLASK_URL = "http://127.0.0.1:5000"
 
@@ -54,8 +55,11 @@ if __name__ == "__main__":
 
     # Create window with dark background color (shown before WebView loads)
     # and loading HTML (shown once WebView initializes)
+
+    version_string = f" - {APP_VERSION.strip()}" if APP_VERSION else ""
+
     window = webview.create_window(
-        title="OP-1Z Sample Manager",
+        title=f"OP-1Z Sample Manager{version_string}",
         html=load_loading_html(),
         width=1280,
         height=800,

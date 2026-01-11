@@ -51,6 +51,13 @@
         text-decoration: none;
         color: white;
     }
+    #app-version {
+        color: var(--text-color);
+        font-size: 1rem;
+        font-weight: 500;
+        background: transparent;
+        padding: 0;
+    }
 </style>
 {% endblock %}
 
@@ -76,6 +83,7 @@
         <p>OP-1Z Sample Manager is a personal project and is not affiliated with Teenage Engineering. Please direct questions and comments to <a href="mailto:romangarms@gmail.com">romangarms@gmail.com</a></p>
 
         <p>Made by <a href="https://romangarms.com" target="_blank" rel="noopener noreferrer">Roman Garms</a> and <a href="https://cheyne.dev" target="_blank" rel="noopener noreferrer">Onyx Cheyne</a>.</p>
+        <p>Version: <code id="app-version">Loading…</code></p>
     </div>
 
     <div class="about-section">
@@ -101,4 +109,7 @@
     </div>
 </div>
 
+<script src="/static/js/about.js"></script>
+
 {% endblock %}
+

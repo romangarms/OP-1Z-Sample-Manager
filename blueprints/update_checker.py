@@ -15,6 +15,18 @@ GITHUB_LATEST_RELEASE_URL = "https://api.github.com/repos/romangarms/OP1Z-Sample
 from .github_version_file import VERSION as APP_VERSION
 
 
+
+@update_checker_bp.route('/get_app_version', methods=['GET'])
+def get_app_version():
+    """Return the current application version."""
+    return jsonify({"app_version": APP_VERSION})
+
+@update_checker_bp.route('/get_github_latest_version', methods=['GET'])
+def get_github_latest_version():
+    """Fetch and return the latest version from GitHub."""
+    latest_tag = get_latest_tag()
+    return jsonify({"github_version": latest_tag})
+
 @update_checker_bp.route('/display_update_notice', methods=['GET'])
 def display_update_notice():
     """
