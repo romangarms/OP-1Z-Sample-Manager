@@ -13,10 +13,13 @@ Note any related issues (Delete if there are none)
 
 ## How Has This Been Tested?
 
+> ⚠️ **PRs should not be considered tested unless the application has been successfully built.**  
+> Use the `build.py` script to perform the build.
+
 **Since we do not currently have automated tests, please describe the manual steps taken to verify these changes.**
 
- - [ ] **Manual Step 1:** (e.g., )
- - [ ] **Manual Step 2:** (e.g., )
+ - [ ] **Manual Step 1:**
+ - [ ] **Manual Step 2:**
  - [ ] **Expected Result:**     
 
 ### Environment
