@@ -25,7 +25,7 @@ Note any related issues (Delete if there are none)
 
  - OS
  - Python version
- - Any Device(s) this was tested with
+ - Any Device(s) this was tested with [OP-1, OP-Z]
 
 # Checklist:
 
