@@ -18,9 +18,9 @@ Note any related issues (Delete if there are none)
 
 **Since we do not currently have automated tests, please describe the manual steps taken to verify these changes.**
 
- - [ ] **Manual Step 1:**
- - [ ] **Manual Step 2:**
- - [ ] **Expected Result:**     
+ - [ ] **Manual Step 1:** (eg. Open Utility Settings)
+ - [ ] **Manual Step 2:** (eg. Toggle "Developer Mode")
+ - [ ] **Expected Result:** (eg. Developer Mode settings are now visible)
 
 ### Environment
 
