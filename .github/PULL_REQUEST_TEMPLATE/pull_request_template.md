@@ -6,8 +6,10 @@ Briefly describe what this PR changes.
 ## Motivation
 Why is this change needed? What problem does it solve?
 
-## Related Issues
-Addresses # (issue)
+## Issues
+Resolves # (issue num)
+
+Note any related issues (Delete if there are None)
 
 ## Change Types
 
