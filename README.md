@@ -40,3 +40,7 @@ This is a Flask app built to handle everything with samples on the OP-Z / OP-1. 
 ## Third-Party Licenses
 
 For a complete list of third-party licenses, see [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+
+## Blog Posts
+
+[View Roman Garms' original blog post](https://romangarms.com/portfolio/op-z-sample-manager-software-to-make-the-op-z-usable). A blog post about the reasoning behind the project and the problems it hopes to solve. Written 10/12/2025.
