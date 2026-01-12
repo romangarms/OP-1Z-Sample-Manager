@@ -11,7 +11,7 @@ Resolves # (issue num)
 
 Note any related issues (Delete if there are None)
 
-# How Has This Been Tested?
+## How Has This Been Tested?
 
 **Since we do not currently have automated tests, please describe the manual steps taken to verify these changes.**
 
