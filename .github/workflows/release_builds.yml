@@ -51,6 +51,20 @@ jobs:
           fi
           echo "VERSION = \"${VERSION}\"" > blueprints/github_version_file.py
 
+      # Also get the latest changelog if it exists and put into LATEST_CHANGELOG.md
+      - name: Fetch latest release changelog
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Fetch the body of the latest release and save to LATEST_CHANGELOG.md
+          # If no release exists, create an empty file to avoid build errors
+          gh release view --json body --jq '.body' > LATEST_CHANGELOG.md || echo "No previous release notes found." > LATEST_CHANGELOG.md
+          
+          echo "Changelog fetched successfully:"
+          cat LATEST_CHANGELOG.md
+          echo "----- End of Changelog -----"
+
       - name: Build (build.py)
         shell: bash
         run: |

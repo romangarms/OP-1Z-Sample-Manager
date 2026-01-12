@@ -100,6 +100,17 @@ def licenses():
     except FileNotFoundError:
         return render_template("licenses.html", content="Licenses file not found.")
 
+@app.route("/changelog")
+def changelog():
+    """Serve the latest changelog page."""
+    changelog_path = os.path.join(BASE_DIR, 'LATEST_CHANGELOG.md')
+    try:
+        with open(changelog_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return render_template("changelog.html", content=content)
+    except FileNotFoundError:
+        return render_template("changelog.html", content="Latest changelog not found.")
+
 @app.route("/open-external-link")
 def open_external_link():
     url = request.args.get("url")
