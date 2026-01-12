@@ -19,6 +19,10 @@ datas = [
     ('THIRD_PARTY_LICENSES.md', '.'),
     ('loading.html', '.'),
 ]
+# Include LATEST_CHANGELOG.md if it exists
+# The check is necessary to avoid build errors when running the build file not from the workflow.
+if os.path.exists('LATEST_CHANGELOG.md'):
+    datas.append(('LATEST_CHANGELOG.md', '.'))
 
 # Collect hidden imports for Flask and related packages
 hiddenimports = [
