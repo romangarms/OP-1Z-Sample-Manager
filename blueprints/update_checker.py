@@ -69,9 +69,11 @@ def display_update_notice():
     if (ignored_version is not None) and (ignored_version == response_data["github_version"]):
         return jsonify(response_data)
     
-    # This does hard fail if there is a parsing issue, which should never occur as long as semver is used in github tags
-    if response_data["github_version"] != 'unknown' and version.parse(APP_VERSION) < version.parse(response_data["github_version"]):
-        response_data["display_update_notice"] = True
+    if response_data["github_version"] != 'unknown':
+        try:
+            response_data["display_update_notice"] = version.parse(APP_VERSION) < version.parse(response_data["github_version"])
+        except version.InvalidVersion:
+            response_data["display_update_notice"] = False
         # Store the current time as the last shown time
         set_config_setting('UPDATE_NOTICE_LAST_SHOWN', datetime.now().isoformat())
 
