@@ -13,6 +13,9 @@ This is a Flask app built to handle everything with samples on the OP-Z / OP-1. 
 ### Using the App:
 - Connect your device in disk mode and begin managing your samples, tapes, projects, and more!
 
+## Wiki:
+View the wiki here: [https://github.com/romangarms/OP-1Z-Sample-Manager/wiki](https://github.com/romangarms/OP-1Z-Sample-Manager/wiki)
+
 ## Screenshots
 ### Home Page:
 ![home page](/screenshots/homepage.png)
