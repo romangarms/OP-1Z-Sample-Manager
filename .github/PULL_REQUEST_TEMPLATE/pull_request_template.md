@@ -9,7 +9,7 @@ Why is this change needed? What problem does it solve?
 ## Issues
 Resolves # (issue num)
 
-Note any related issues (Delete if there are None)
+Note any related issues (Delete if there are none)
 
 ## How Has This Been Tested?
 
