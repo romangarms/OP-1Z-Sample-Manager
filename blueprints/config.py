@@ -34,7 +34,7 @@ CONFIG_PATH = get_config_path()
 app_config = {}
 
 
-def get_default_working_directory():
+def get_default_working_directory(project_name):
     """Return default working directory: ~/Documents/<PROJECT_NAME>/"""
     if sys.platform == 'win32':
         # On Windows, use registry or USERPROFILE to find actual Documents folder
@@ -55,7 +55,7 @@ def get_default_working_directory():
         # On macOS and Linux, ~/Documents works correctly
         documents = os.path.expanduser("~/Documents")
 
-    return os.path.join(documents, PROJECT_NAME)
+    return os.path.join(documents, project_name)
 
 # Utility to read JSON from a file and return it as a Python object
 def read_json_from_path(path):
@@ -124,7 +124,7 @@ def get_config_setting(key, default=None):
     if key == "WORKING_DIRECTORY":
         value = app_config.get(key)
         if not value:
-            return get_default_working_directory()
+            return get_default_working_directory(PROJECT_NAME)
         return value
 
     # Special case: return default selected device if not set
