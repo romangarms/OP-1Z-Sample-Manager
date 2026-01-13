@@ -15,13 +15,18 @@ def run_migrations(logger: logging.Logger) -> bool:
 
     It will run any migration scripts between the "LAST_RAN_VERSION" and the current application version defined in the github_version_file.
 
-    ie. If the LAST_RAN_VERSION is "v0.0.1" and the current version is "v0.0.4", it will run the migration scripts for "v0.0.2", "v0.0.3", and "v0.0.4" in that order.
+    ie. If the LAST_RAN_VERSION is "v1.2.5" and the current version is "v7.3.4", it will run the migration scripts for "v2.0.0", "v3.0.0", and "v4.0.0" in that order.
 
     Not all of them need to exist - only the ones that have changes.
 
     Migration scripts are located in the blueprints/migration/migration_scripts/ folder.
     They must define a TARGET_VERSION string and a migrate() function.
     They should be named based on their target version for clarity, but this is not strictly required.
+
+    The majority of the migration logic should be encapsulated within each migration script's migrate() function.
+    This is because if the behaviour of the application changes in future versions, we want the migration scripts to remain valid.
+
+    If they rely on any config settings, those should be read at runtime from within the migrate() function.
 
     Args:
         logger (logging.Logger): Logger instance to log migration progress.
@@ -65,7 +70,7 @@ def run_migrations(logger: logging.Logger) -> bool:
     # Handle PyInstaller/Frozen environments where __path__ might behave differently
     pkg_path = getattr(migrations_pkg, "__path__", [])
     
-    for finder, name, ispkg in pkgutil.iter_modules(pkg_path):
+    for _, name, _ in pkgutil.iter_modules(pkg_path):
         logger.info(f"Found migration module: {name}")
         try:
             full_name = f"{migrations_pkg.__name__}.{name}"
