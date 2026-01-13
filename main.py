@@ -64,6 +64,7 @@ if __name__ == "__main__":
         width=1280,
         height=800,
         background_color="#1a1a1a",  # Matches loading screen - no white flash
+        text_select=True
     )
 
     # Wait for loading screen DOM to be ready, then start polling Flask
