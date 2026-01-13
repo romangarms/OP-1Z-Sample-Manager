@@ -49,6 +49,9 @@ def run_migrations(logger: logging.Logger) -> bool:
     except version.InvalidVersion as e:
         logger.error(f"Critical: Could not parse version strings. App: {APP_VERSION}, Config: {last_ran_version_str}. Error: {e}")
         return False
+    
+    if current_version.is_devrelease or last_ran_version.is_devrelease:
+        logger.warning("Development version detected. Migration will not be performed.")
 
     logger.info(f"Migration Check: Current App Version {current_version} | Last Ran Migration {last_ran_version}")
 
