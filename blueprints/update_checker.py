@@ -3,9 +3,7 @@ from urllib.error import URLError, HTTPError
 import requests
 from datetime import datetime, timedelta
 from .config import get_config_setting, set_config_setting
-
-
-
+from packaging import version
 
 # Create Blueprint
 update_checker_bp = Blueprint('update_checker', __name__)
@@ -13,8 +11,6 @@ update_checker_bp = Blueprint('update_checker', __name__)
 # Constants:
 GITHUB_LATEST_RELEASE_URL = "https://api.github.com/repos/romangarms/OP1Z-Sample-Manager/releases/latest"
 from .github_version_file import VERSION as APP_VERSION
-
-
 
 @update_checker_bp.route('/get_app_version', methods=['GET'])
 def get_app_version():
@@ -73,8 +69,11 @@ def display_update_notice():
     if (ignored_version is not None) and (ignored_version == response_data["github_version"]):
         return jsonify(response_data)
     
-    if response_data["github_version"] != 'unknown' and response_data["github_version"] != APP_VERSION:
-        response_data["display_update_notice"] = True
+    if response_data["github_version"] != 'unknown':
+        try:
+            response_data["display_update_notice"] = version.parse(APP_VERSION) < version.parse(response_data["github_version"])
+        except version.InvalidVersion:
+            response_data["display_update_notice"] = False
         # Store the current time as the last shown time
         set_config_setting('UPDATE_NOTICE_LAST_SHOWN', datetime.now().isoformat())
 
