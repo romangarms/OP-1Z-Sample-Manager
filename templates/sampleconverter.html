@@ -19,6 +19,10 @@
         <i data-lucide="folder-open"></i>
         Open Converted
     </button>
+    <button onclick="openSettingsModal()" class="nav-btn nav-btn-secondary">
+        <i data-lucide="settings"></i>
+        Settings
+    </button>
     <button onclick="deleteAllConverted()" class="nav-btn nav-btn-danger">
         <i data-lucide="trash-2"></i>
         Delete All Converted
@@ -50,6 +54,33 @@
 </div>
 
 {{ loading_overlay_progress(id='converting', title='Converting Samples', message='Please wait...') }}
+
+<!-- Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="settingsModalTitle">Conversion Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6>Pitch Correction</h6>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="setting-auto-pitch" checked>
+                        <label class="form-check-label" for="setting-auto-pitch">
+                            Auto-tune synth samples to nearest A note (A 440Hz)
+                        </label>
+                    </div>
+                    <small class="text-muted">When enabled, synth samples will automatically be pitch-corrected to the nearest A note for proper tuning on OP-1/OP-Z devices. Note that tuning can take some processing time.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="/static/js/sampleconverter.js"></script>
 

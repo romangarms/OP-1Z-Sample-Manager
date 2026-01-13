@@ -60,9 +60,69 @@ function hideConvertingProgress() {
     document.getElementById('converting-progress').style.width = '0%';
 }
 
+function getNearestNote(hz) {
+    const notes = {
+        110: 'A2',
+        220: 'A3',
+        440: 'A4',
+        880: 'A5',
+        1760: 'A6'
+    };
+    return notes[hz] || `${hz}Hz`;
+}
+
+// Settings management
+async function loadSettings() {
+    const settings = {
+        autoPitch: true // default
+    };
+
+    try {
+        const res = await fetch('/get-config-setting?config_option=AUTO_PITCH_SYNTH_SAMPLES');
+        const data = await res.json();
+        if (data.config_value !== undefined && data.config_value !== null && data.config_value !== '') {
+            settings.autoPitch = data.config_value;
+        }
+    } catch (e) {
+        console.warn('Failed to load settings:', e);
+    }
+
+    return settings;
+}
+
+async function saveSettings(settings) {
+    try {
+        await fetch('/set-config-setting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                config_option: 'AUTO_PITCH_SYNTH_SAMPLES',
+                config_value: settings.autoPitch
+            })
+        });
+    } catch (e) {
+        console.warn('Failed to save settings:', e);
+    }
+}
+
+async function openSettingsModal() {
+    const settings = await loadSettings();
+    document.getElementById('setting-auto-pitch').checked = settings.autoPitch;
+
+    const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
+    modal.show();
+}
+
 async function handleFiles(files, type) {
     const results = [];
     const total = files.length;
+
+    // Check if auto-pitch is enabled for synth samples from settings
+    const settings = await loadSettings();
+    const autoPitch = type === 'synth' && settings.autoPitch;
+
+    console.log('Settings loaded:', settings);
+    console.log('Auto-pitch enabled:', autoPitch);
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -71,6 +131,7 @@ async function handleFiles(files, type) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', type); // "drum" or "synth"
+        formData.append('auto_pitch', autoPitch ? 'true' : 'false');
 
         try {
             const response = await fetch('/convert', {
@@ -79,29 +140,46 @@ async function handleFiles(files, type) {
             });
 
             const result = await response.json();
+            console.log('Conversion result:', result);
 
             if (!response.ok) {
                 results.push(`${file.name}: Error - ${result.error || 'Conversion failed'}`);
+                toast.error(`${file.name}: ${result.error || 'Conversion failed'}`);
             } else {
-                results.push(`${file.name}: ${result.message || 'Converted'}`);
+                // Display pitch correction info if available
+                if (result.pitch_corrected && result.pitch_info) {
+                    const info = result.pitch_info;
+                    const note = getNearestNote(info.target_hz);
+                    const message = `Converted and tuned to ${note} (${info.detected_hz.toFixed(1)}Hz → ${info.target_hz}Hz)`;
+                    results.push(`${file.name}: ${message}`);
+                    toast.success(message, file.name);
+                } else {
+                    const message = result.message || 'Converted';
+                    results.push(`${file.name}: ${message}`);
+                    toast.success(message, file.name);
+                }
             }
         } catch (err) {
+            console.error('Conversion error:', err);
             results.push(`${file.name}: Error - ${err.message}`);
+            toast.error(`${file.name}: ${err.message}`);
         }
     }
 
     hideConvertingProgress();
 
-    // Show results as toast
-    const successCount = results.filter(r => r.includes('Success') || r.includes('Converted')).length;
-    const errorCount = results.length - successCount;
+    // Show summary toast for multiple files
+    if (total > 1) {
+        const successCount = results.filter(r => r.includes('Converted')).length;
+        const errorCount = results.length - successCount;
 
-    if (errorCount === 0) {
-        toast.success(`${successCount} file(s) converted`, 'Conversion Complete');
-    } else if (successCount === 0) {
-        toast.error(`${errorCount} file(s) failed`, 'Conversion Failed');
-    } else {
-        toast.warning(`${successCount} converted, ${errorCount} failed`, 'Partial Conversion');
+        if (errorCount === 0) {
+            toast.success(`All ${successCount} file(s) converted successfully`, 'Batch Complete');
+        } else if (successCount === 0) {
+            toast.error(`All ${errorCount} file(s) failed`, 'Batch Failed');
+        } else {
+            toast.warning(`${successCount} converted, ${errorCount} failed`, 'Batch Partial');
+        }
     }
 }
 
@@ -145,6 +223,13 @@ function deleteAllConverted() {
 document.addEventListener('DOMContentLoaded', () => {
     setupDragDrop('drum-samples', 'drum');
     setupDragDrop('synth-samples', 'synth');
+
+    // Setup settings event listener
+    document.getElementById('setting-auto-pitch').addEventListener('change', async (e) => {
+        const settings = await loadSettings();
+        settings.autoPitch = e.target.checked;
+        await saveSettings(settings);
+    });
 
     // Initialize Lucide icons
     lucide.createIcons();
