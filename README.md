@@ -34,7 +34,6 @@ View the wiki here: [https://github.com/romangarms/OP-1Z-Sample-Manager/wiki](ht
 ![tape exporter op1](/screenshots/tapeexport.png)
 
 ### Backup and Restore:
-![Backup and Restore OP-Z](/screenshots/backupandrestoreopz.png)
 ![Backup and Restore OP-1](/screenshots/backupandrestoreop1.png)
 
 ### Utility Settings:
