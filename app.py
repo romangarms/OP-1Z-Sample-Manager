@@ -3,7 +3,6 @@ import os
 import webbrowser
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-from blueprints.migration import migrator
 from blueprints.config import load_config, run_all_config_tasks, get_config_setting, set_config_setting, config_bp
 from blueprints.sample_converter import sample_converter_bp
 from blueprints.sample_manager import sample_manager_bp
@@ -12,7 +11,6 @@ from blueprints.dialogs import dialog_bp
 from blueprints.backup import backup_bp
 from blueprints.device_monitor import device_monitor_bp, initialize_device_monitor
 from blueprints.update_checker import update_checker_bp
-
 
 # Get base path for PyInstaller or normal execution
 if getattr(sys, 'frozen', False):
@@ -40,18 +38,12 @@ app.register_blueprint(update_checker_bp)
 def app_startup_tasks():
     # config
     load_config()
-
-    # Run migrations - this relies on config being loaded, but will run before anything can use them.
-    successfull_migration = migrator.run_migrations()
-    if not successfull_migration:
-        print("Migrations failed - exiting startup.")
-        exit(1)
-    
     run_all_config_tasks()  # Initialize config settings
     # fetch and set the os config
     set_config_setting("OS", get_os())
     # Note: Device monitoring is initialized lazily when the homepage loads
     # to avoid blocking app startup
+
 
 
 def get_os():
