@@ -19,6 +19,8 @@ For small, straightforward fixes (like those tagged `good first issue`), please 
 
 ## Creating pull requests
 
+Please open pull requests as drafts if they are not yet ready for review. Non-draft pull requests are assumed to be ready for review.
+
 To create a pull request:
 1. Fork this repository.
 2. Make your changes in your fork.
