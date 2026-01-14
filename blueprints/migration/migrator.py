@@ -184,9 +184,10 @@ def backup_file(logger: logging.Logger, source_path: str, vFrom: str, backup_dir
         if os.path.exists(source_path):
             logger.info(f"Backing up file from {source_path} to {backup_path}")
             try:
-                os.replace(source_path, backup_path)
+                shutil.copy2(source_path, backup_path)
             except Exception:
-                shutil.move(source_path, backup_path)
+                logger.exception(f"Failed to back up file from {source_path} to {backup_path}")
+                return False
         else:
             logger.warning(f"Source file {source_path} does not exist. No backup made.")
         return True

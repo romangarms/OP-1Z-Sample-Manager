@@ -48,15 +48,14 @@ def migrate(logger: logging.Logger):
                     return False
             # Attempt to move the v1 config to the v2 path
             try:
-                # Prefer os.replace when on same filesystem (atomic), fallback to shutil.move
+                backup_file(logger, v1_config_file_path, "v1_to_v2", None)
                 try:
                     os.replace(v1_config_file_path, v2_config_file_path)
                 except Exception:
                     shutil.move(v1_config_file_path, v2_config_file_path)
-
             except Exception:
-                # As a last resort, copy and remove the original
-                logger.exception("Failed to move/copy v1 config to v2 location")
+                logger.exception("Failed to move v1 config to v2 location")
+                return False
 
             logger.info("Successfully migrated config from %s to %s", v1_config_file_path, v2_config_file_path)
 
