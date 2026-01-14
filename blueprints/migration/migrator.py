@@ -182,17 +182,13 @@ def backup_file(logger: logging.Logger, source_path: str, vFrom: str, backup_dir
         base_name = os.path.basename(source_path)
         backup_path = os.path.join(backup_dir, f"{base_name}.{time_str}.{vFrom}.bak")
 
-    try:
-        if os.path.exists(source_path):
-            logger.info(f"Backing up file from {source_path} to {backup_path}")
-            try:
-                shutil.copy2(source_path, backup_path)
-            except Exception:
-                logger.exception(f"Failed to back up file from {source_path} to {backup_path}")
-                return False
-        else:
-            logger.warning(f"Source file {source_path} does not exist. No backup made.")
-        return True
-    except Exception:
-        logger.exception(f"Failed to back up file from {source_path} to {backup_path}")
-        return False
+    if os.path.exists(source_path):
+        logger.info(f"Backing up file from {source_path} to {backup_path}")
+        try:
+            shutil.copy2(source_path, backup_path)
+        except Exception:
+            logger.exception(f"Failed to back up file from {source_path} to {backup_path}")
+            return False
+    else:
+        logger.warning(f"Source file {source_path} does not exist. No backup made.")
+    return True
