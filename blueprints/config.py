@@ -33,6 +33,7 @@ def get_config_path():
 CONFIG_PATH = get_config_path()
 app_config = {}
 config_load_error = None  # Stores error details if config fails to load
+config_write_disabled = False  # Blocks config writes when True (set on parse error)
 
 
 def get_default_working_directory(project_name):
@@ -103,8 +104,9 @@ def run_all_config_tasks():
 
 # Function to load the configuration from a JSON file
 def load_config():
-    global config_load_error
+    global config_load_error, config_write_disabled
     config_load_error = None  # Reset error state
+    config_write_disabled = False  # Reset write protection
     if os.path.exists(CONFIG_PATH):
         try:
             loaded = read_json_from_path(CONFIG_PATH)
@@ -116,11 +118,14 @@ def load_config():
                 "line": e.lineno,
                 "column": e.colno
             }
+            config_write_disabled = True  # Prevent writes to preserve malformed file
             app_config.clear()  # Start with empty config
     return app_config
 
 # Function to save the configuration to a JSON file
 def save_config():
+    if config_write_disabled:
+        return  # Don't write when config is in error state
     write_json_to_path(CONFIG_PATH, app_config)
 
 # Function to reset configuration (clears file and memory)
@@ -250,7 +255,8 @@ def remove_config_setting_route():
 
 @config_bp.route('/reset-config', methods=['POST'])
 def reset_config_flask():
-    global config_load_error
+    global config_load_error, config_write_disabled
+    config_write_disabled = False  # Re-enable writes before reset
     delete_config_setting("OPZ_MOUNT_PATH", save=False)
     reset_config()
     config_load_error = None  # Clear error state after reset
@@ -260,6 +266,15 @@ def reset_config_flask():
 @config_bp.route('/config-status')
 def get_config_status():
     """Check if config loaded successfully."""
+    if config_load_error:
+        return jsonify({"ok": False, "error": config_load_error})
+    return jsonify({"ok": True})
+
+
+@config_bp.route('/reload-config', methods=['POST'])
+def reload_config():
+    """Re-attempt to load the config file. Used after user edits a malformed config."""
+    load_config()
     if config_load_error:
         return jsonify({"ok": False, "error": config_load_error})
     return jsonify({"ok": True})
