@@ -16,7 +16,7 @@ import shutil
 from packaging import version
 
 from blueprints.github_version_file import VERSION as APP_VERSION
-from blueprints.config import get_config_setting, set_config_setting
+from blueprints.config import get_config_setting, load_config, set_config_setting
 
 def run_migrations(logger: logging.Logger) -> bool:
     """
@@ -61,6 +61,8 @@ def run_migrations(logger: logging.Logger) -> bool:
 
         #TODO: if making a new migrator for a future version, consider changing the default to current_version_str to skip all migrations on first launch.
 
+
+        load_config()
         last_ran_version_str = get_config_setting("LAST_RAN_VERSION", "v0.0.0")
         last_ran_version = version.parse(last_ran_version_str)
     except version.InvalidVersion as e:
@@ -141,6 +143,7 @@ def run_migrations(logger: logging.Logger) -> bool:
 
             # IMPORTANT: Update state immediately after success.
             # If the next migration fails, we don't want to re-run this one.
+            load_config()  # Reload config to ensure we have latest settings
             set_config_setting("LAST_RAN_VERSION", str(mig_version))
             logger.info(f"Successfully finished {name}. Config updated.")
             
@@ -150,6 +153,7 @@ def run_migrations(logger: logging.Logger) -> bool:
 
     # 5. Final Sync
     # Ensure we are tagged at the exact current version (handles gaps where no script existed)
+    load_config()  # Reload config to ensure we have latest settings
     set_config_setting("LAST_RAN_VERSION", current_version_str)
     logger.info("All migrations completed successfully.")
     

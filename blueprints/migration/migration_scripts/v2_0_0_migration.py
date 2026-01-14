@@ -63,6 +63,8 @@ def migrate(logger: logging.Logger):
         except Exception:
             logger.exception("Unexpected error during migration")
             return False
+    else:
+        logger.info("No v1 config file found; skipping config migration")
 
     # Migrate files in working directory
     if os.path.exists(v1_work_dir):
@@ -81,7 +83,7 @@ def migrate(logger: logging.Logger):
                         shutil.copy2(source, destination)
                 except Exception:
                     logger.exception(f"Failed to copy {source} to {destination}")
-                    
+
             logger.info("Successfully migrated working directory from %s to %s", v1_work_dir, v2_work_dir)
 
         except Exception:
@@ -145,7 +147,6 @@ def v2_get_config_dir():
     # Create directory if it doesn't exist
     os.makedirs(config_dir, exist_ok=True)
     return config_dir
-
 
 def v2_get_config_path():
     """Get the full path to the config file."""
