@@ -3,6 +3,7 @@ This is a migration script.
 
 It updates the system from version v1.x.x to v2.x.x.
 
+On any sort of failure, it raises a MigrationError.
 """
 import logging
 import os
