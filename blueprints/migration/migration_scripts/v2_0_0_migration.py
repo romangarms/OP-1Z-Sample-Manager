@@ -1,7 +1,7 @@
 """
 This is a migration script.
 
-It updates the system from version v0.0.1 to v0.0.2.
+It updates the system from version v1.x.x to v2.x.x.
 
 """
 import logging
