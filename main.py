@@ -3,7 +3,6 @@ import os
 import threading
 import time
 import urllib.request
-import multiprocessing
 import webview
 from blueprints.github_version_file import VERSION as APP_VERSION
 
@@ -50,8 +49,6 @@ def load_loading_html():
 
 
 if __name__ == "__main__":
-    multiprocessing.freeze_support()  # Required for PyInstaller + ProcessPoolExecutor
-
     # Start Flask in background thread
     flask_thread = threading.Thread(target=start_flask, daemon=True)
     flask_thread.start()

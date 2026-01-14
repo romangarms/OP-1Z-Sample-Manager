@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 import uuid
 import shutil
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from flask import Blueprint, request, jsonify, current_app, Response
 from .config import get_config_setting
 from .utils import run_ffmpeg
@@ -286,7 +286,7 @@ def convert_batch():
         completed = 0
         results = []
 
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {executor.submit(_process_single_file_worker, args): args[2]
                        for args in worker_args}
 
