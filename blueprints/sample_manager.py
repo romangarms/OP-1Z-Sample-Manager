@@ -9,6 +9,15 @@ from .config import get_config_setting, get_device_mount_path
 from .sample_converter import convert_audio_file, UPLOAD_FOLDER
 from .utils import get_unique_filepath, run_ffmpeg
 from .devices import OP_Z, OP_1, get_device_by_id
+from .constants import (
+    CONFIG_SELECTED_DEVICE,
+    DIR_SAMPLEPACKS,
+    DIR_DRUM,
+    DIR_SYNTH,
+    DIR_USER,
+    SAMPLE_TYPE_DRUM,
+    SAMPLE_TYPE_SYNTH,
+)
 
 # Create Blueprint
 sample_manager_bp = Blueprint('sample_manager', __name__)
@@ -42,7 +51,7 @@ def get_sample_type_from_category(category):
         "drum" or "synth"
     """
     drum_categories = ["1-kick", "2-snare", "3-perc", "4-fx"]
-    return "drum" if category in drum_categories else "synth"
+    return SAMPLE_TYPE_DRUM if category in drum_categories else SAMPLE_TYPE_SYNTH
 
 
 # Device storage constants - now imported from devices module
@@ -66,7 +75,7 @@ def get_device_config(device=None):
         tuple: (mount_path, device_name)
     """
     if device is None:
-        device = get_config_setting("SELECTED_DEVICE")
+        device = get_config_setting(CONFIG_SELECTED_DEVICE)
     device_obj = get_device_by_id(device)
     if device_obj:
         return get_device_mount_path(device), device_obj.name
@@ -184,7 +193,7 @@ def get_device_storage_info(device, mount_path):
 
     if device == "opz":
         # OP-Z: Only scan samplepacks directory
-        scan_path = os.path.join(mount_path, "samplepacks")
+        scan_path = os.path.join(mount_path, DIR_SAMPLEPACKS)
         total_storage = OPZ_STORAGE_KB
     else:
         # OP-1: Scan entire mount path
@@ -227,8 +236,8 @@ def validate_device_folder_structure(device, mount_path):
 
     if device == "op1":
         # OP-1: Check for drum/ and synth/ directories
-        drum_path = os.path.join(mount_path, "drum")
-        synth_path = os.path.join(mount_path, "synth")
+        drum_path = os.path.join(mount_path, DIR_DRUM)
+        synth_path = os.path.join(mount_path, DIR_SYNTH)
 
         if not os.path.exists(drum_path) or not os.path.isdir(drum_path):
             return False, "Invalid OP-1 folder: 'drum' directory not found."
@@ -237,7 +246,7 @@ def validate_device_folder_structure(device, mount_path):
             return False, "Invalid OP-1 folder: 'synth' directory not found."
     else:
         # OP-Z: Check for samplepacks/ directory with category folders
-        samplepacks_path = os.path.join(mount_path, "samplepacks")
+        samplepacks_path = os.path.join(mount_path, DIR_SAMPLEPACKS)
         if not os.path.exists(samplepacks_path):
             return False, "Invalid OP-Z folder: 'samplepacks' directory not found. Please select the root OP-Z mount directory."
 
@@ -278,7 +287,7 @@ def read_opz():
         category_data = []
         for slot in range(NUMBER_OF_SAMPLES_PER_SLOT):
             slot_name = f"{slot + 1:02d}"  # "01", "02", ..., "10"
-            slot_path = os.path.join(OPZ_MOUNT_PATH, "samplepacks", category, slot_name)
+            slot_path = os.path.join(OPZ_MOUNT_PATH, DIR_SAMPLEPACKS, category, slot_name)
 
             sample_info = {"path": None}
 
@@ -300,7 +309,7 @@ def read_opz():
 @sample_manager_bp.route("/upload-sample", methods=["POST"])
 def upload_sample():
     """Upload a sample to OP-Z or OP-1."""
-    device = request.form.get("device", get_config_setting("SELECTED_DEVICE"))
+    device = request.form.get("device", get_config_setting(CONFIG_SELECTED_DEVICE))
     file = request.files.get("file")
 
     if not file:
@@ -315,12 +324,12 @@ def upload_sample():
             return {"error": "Missing target_path"}, 400
 
         parts = target_path.split("/")
-        if len(parts) != 2 or parts[0] not in ["drum", "synth"]:
+        if len(parts) != 2 or parts[0] not in [DIR_DRUM, DIR_SYNTH]:
             return {"error": "Invalid target_path format"}, 400
 
         parent_folder, subdir = parts
 
-        if subdir == "user":
+        if subdir == DIR_USER:
             return {"error": "Cannot upload to 'user' directory"}, 403
 
         # Validate folder structure
@@ -340,7 +349,7 @@ def upload_sample():
         if not is_valid:
             return {"error": error}, 403
 
-        sample_type = "drum" if parent_folder == "drum" else "synth"
+        sample_type = SAMPLE_TYPE_DRUM if parent_folder == DIR_DRUM else SAMPLE_TYPE_SYNTH
         file_extension = ".aif"
         overwrite_existing = False
     else:
@@ -356,7 +365,7 @@ def upload_sample():
             return {"error": "Invalid category"}, 400
 
         # Sanitize and validate path (prevents path traversal and dangerous characters)
-        samplepacks_base = os.path.join(mount_path, "samplepacks")
+        samplepacks_base = os.path.join(mount_path, DIR_SAMPLEPACKS)
         is_valid, safe_target_dir, error = sanitize_and_validate_path(
             samplepacks_base, category, f"{int(slot)+1:02d}"
         )
@@ -440,7 +449,7 @@ def delete_sample():
     """Delete a sample from OP-Z or OP-1."""
     data = request.get_json()
     sample_path = data.get("path")
-    device = data.get("device", get_config_setting("SELECTED_DEVICE"))
+    device = data.get("device", get_config_setting(CONFIG_SELECTED_DEVICE))
 
     if not sample_path:
         return {"error": "Invalid path"}, 400
@@ -451,7 +460,7 @@ def delete_sample():
     if device == "op1":
         allowed_base = mount_path
     else:
-        allowed_base = os.path.join(mount_path, "samplepacks")
+        allowed_base = os.path.join(mount_path, DIR_SAMPLEPACKS)
 
     # Validate path is within allowed directory (prevents path traversal)
     is_valid, safe_path, error = validate_full_path(sample_path, allowed_base)
@@ -465,7 +474,7 @@ def delete_sample():
     if device == "op1":
         rel_path = os.path.relpath(safe_path, mount_path)
         parts = rel_path.split(os.sep)
-        if len(parts) >= 2 and parts[1] == "user":
+        if len(parts) >= 2 and parts[1] == DIR_USER:
             return {"error": "Cannot delete from 'user' directory"}, 403
 
     try:
@@ -485,7 +494,7 @@ def move_sample():
         return {"error": "Missing required fields"}, 400
 
     OPZ_MOUNT_PATH = get_device_mount_path("opz")
-    samplepacks_base = os.path.join(OPZ_MOUNT_PATH, "samplepacks")
+    samplepacks_base = os.path.join(OPZ_MOUNT_PATH, DIR_SAMPLEPACKS)
 
     # Validate source path is within samplepacks (full path from frontend)
     is_valid, safe_source_path, error = validate_full_path(source_path, samplepacks_base)
@@ -669,14 +678,14 @@ def get_op1_counts(op1_mount_path):
         "patches": 0
     }
 
-    for parent_folder in ["drum", "synth"]:
+    for parent_folder in [DIR_DRUM, DIR_SYNTH]:
         folder_path = os.path.join(op1_mount_path, parent_folder)
         if not os.path.exists(folder_path):
             continue
 
         for subdir in os.listdir(folder_path):
             # Skip "user" directories - they're special and don't count toward limits
-            if subdir == "user":
+            if subdir == DIR_USER:
                 continue
 
             subdir_path = os.path.join(folder_path, subdir)
@@ -721,7 +730,7 @@ def read_op1():
         "synth": {"subdirectories": {}}
     }
 
-    for parent_folder in ["drum", "synth"]:
+    for parent_folder in [DIR_DRUM, DIR_SYNTH]:
         folder_path = os.path.join(OP1_MOUNT_PATH, parent_folder)
         if not os.path.exists(folder_path):
             continue
@@ -772,7 +781,7 @@ def upload_op1_folder():
     if not parent_folder or not folder_name or not files:
         return {"error": "Missing parent, folder_name, or files"}, 400
 
-    if parent_folder not in ["drum", "synth"]:
+    if parent_folder not in [DIR_DRUM, DIR_SYNTH]:
         return {"error": "Invalid parent folder"}, 400
 
     # Check for reserved folder name
@@ -827,7 +836,7 @@ def upload_op1_folder():
             if needs_conversion:
                 temp_path = os.path.join(UPLOAD_FOLDER, str(uuid.uuid4()) + "_" + original_filename)
                 file.save(temp_path)
-                sample_type = "drum" if parent_folder == "drum" else "synth"
+                sample_type = SAMPLE_TYPE_DRUM if parent_folder == DIR_DRUM else SAMPLE_TYPE_SYNTH
                 convert_audio_file(temp_path, final_path, sample_type)
             else:
                 file.save(final_path)
@@ -858,7 +867,7 @@ def create_op1_subdirectory():
     if not parent or not name:
         return {"error": "Missing parent or name"}, 400
 
-    if parent not in ["drum", "synth"]:
+    if parent not in [DIR_DRUM, DIR_SYNTH]:
         return {"error": "Invalid parent folder"}, 400
 
     # Check for reserved folder name
@@ -898,7 +907,7 @@ def rename_op1_subdirectory():
         return {"error": "Missing old_path or new_name"}, 400
 
     parts = old_path.split("/")
-    if len(parts) != 2 or parts[0] not in ["drum", "synth"]:
+    if len(parts) != 2 or parts[0] not in [DIR_DRUM, DIR_SYNTH]:
         return {"error": "Invalid path format"}, 400
 
     parent, old_name = parts
@@ -946,7 +955,7 @@ def delete_op1_subdirectory():
         return {"error": "Missing path"}, 400
 
     parts = path.split("/")
-    if len(parts) != 2 or parts[0] not in ["drum", "synth"]:
+    if len(parts) != 2 or parts[0] not in [DIR_DRUM, DIR_SYNTH]:
         return {"error": "Invalid path format"}, 400
 
     parent, name = parts
