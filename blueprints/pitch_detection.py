@@ -1,14 +1,92 @@
-"""Pitch detection and correction utilities for sample conversion."""
+"""Pitch detection and correction utilities for sample conversion.
+
+Uses YIN algorithm implemented in pure NumPy for lightweight pitch detection.
+Based on: de Cheveigné, A., & Kawahara, H. (2002). YIN, a fundamental frequency estimator.
+"""
 import logging
 import numpy as np
-import librosa
+import soundfile as sf
 
 logger = logging.getLogger(__name__)
+
+# Frequency constants
+FMIN = 110.0   # A2
+FMAX = 1760.0  # A6
+
+
+def _difference_function(signal, max_tau):
+    """Compute the YIN difference function using FFT-based autocorrelation."""
+    n = len(signal)
+    # Pad signal for FFT
+    padded = np.zeros(2 * n)
+    padded[:n] = signal
+
+    # FFT-based autocorrelation (Wiener-Khinchin theorem)
+    fft_signal = np.fft.rfft(padded)
+    acf = np.fft.irfft(fft_signal * np.conj(fft_signal))[:n]
+
+    # Energy at zero lag
+    energy = acf[0]
+
+    # Compute difference function: d(tau) = r(0) - 2*r(tau) + energy_shifted
+    # Using cumulative sum for efficiency
+    cumsum = np.cumsum(signal ** 2)
+
+    diff = np.zeros(max_tau)
+    diff[0] = 0
+    for tau in range(1, max_tau):
+        # Energy of shifted signal segment
+        energy_shifted = cumsum[n - 1] - cumsum[tau - 1] if tau > 0 else cumsum[n - 1]
+        energy_orig = cumsum[n - tau - 1] if n - tau - 1 >= 0 else 0
+        diff[tau] = energy_orig + energy_shifted - 2 * acf[tau]
+
+    return diff
+
+
+def _cumulative_mean_normalized_difference(diff):
+    """Compute cumulative mean normalized difference function (CMNDF)."""
+    cmndf = np.zeros(len(diff))
+    cmndf[0] = 1.0
+
+    running_sum = 0.0
+    for tau in range(1, len(diff)):
+        running_sum += diff[tau]
+        cmndf[tau] = diff[tau] / (running_sum / tau) if running_sum > 0 else 1.0
+
+    return cmndf
+
+
+def _get_pitch(cmndf, sr, fmin, fmax, threshold=0.1):
+    """Extract pitch from CMNDF using absolute threshold."""
+    min_tau = int(sr / fmax)
+    max_tau = min(int(sr / fmin), len(cmndf) - 1)
+
+    # Find first tau below threshold
+    for tau in range(min_tau, max_tau):
+        if cmndf[tau] < threshold:
+            # Parabolic interpolation for sub-sample accuracy
+            if tau > 0 and tau < len(cmndf) - 1:
+                alpha = cmndf[tau - 1]
+                beta = cmndf[tau]
+                gamma = cmndf[tau + 1]
+                peak = tau + 0.5 * (alpha - gamma) / (alpha - 2 * beta + gamma + 1e-10)
+            else:
+                peak = tau
+            return sr / peak if peak > 0 else None
+
+    # Fallback: find minimum in valid range
+    valid_range = cmndf[min_tau:max_tau + 1]
+    if len(valid_range) > 0:
+        min_idx = np.argmin(valid_range) + min_tau
+        if cmndf[min_idx] < 0.5:  # Only return if reasonably confident
+            return sr / min_idx
+
+    return None
 
 
 def detect_pitch(audio_path, max_duration=None):
     """
-    Detect the fundamental frequency of an audio file.
+    Detect the fundamental frequency of an audio file using YIN algorithm.
 
     Args:
         audio_path: Path to the audio file to analyze
@@ -18,25 +96,45 @@ def detect_pitch(audio_path, max_duration=None):
         float: Median fundamental frequency in Hz, or None if detection fails
     """
     try:
-        # Load audio file (librosa resamples to 22050 Hz by default, but we'll use native rate)
-        # Limit duration to avoid processing more audio than needed
-        y, sr = librosa.load(audio_path, sr=None, mono=True, duration=max_duration)
+        # Load audio with soundfile
+        y, sr = sf.read(audio_path, dtype='float32')
 
-        # Use pYIN algorithm for pitch detection
-        # Range: A2 (110 Hz) to A6 (1760 Hz) covers typical synth samples
-        f0, voiced_flag, voiced_probs = librosa.pyin(
-            y,
-            fmin=librosa.note_to_hz('A2'),  # 110 Hz
-            fmax=librosa.note_to_hz('A6'),   # 1760 Hz
-            sr=sr  # Pass the actual sample rate
-        )
+        # Convert stereo to mono if needed
+        if len(y.shape) > 1:
+            y = np.mean(y, axis=1)
 
-        # Get median of voiced frames only
-        voiced_freqs = f0[voiced_flag]
-        if len(voiced_freqs) == 0:
+        # Limit duration if specified
+        if max_duration is not None:
+            max_samples = int(max_duration * sr)
+            y = y[:max_samples]
+
+        # YIN parameters
+        frame_size = 2048
+        hop_size = 512
+        max_tau = int(sr / FMIN) + 1
+
+        # Collect pitch estimates from each frame
+        pitches = []
+
+        for start in range(0, len(y) - frame_size, hop_size):
+            frame = y[start:start + frame_size]
+
+            # Skip silent frames
+            if np.max(np.abs(frame)) < 0.01:
+                continue
+
+            # Compute YIN
+            diff = _difference_function(frame, min(max_tau, frame_size // 2))
+            cmndf = _cumulative_mean_normalized_difference(diff)
+            pitch = _get_pitch(cmndf, sr, FMIN, FMAX)
+
+            if pitch is not None and FMIN <= pitch <= FMAX:
+                pitches.append(pitch)
+
+        if len(pitches) == 0:
             return None
 
-        return float(np.median(voiced_freqs))
+        return float(np.median(pitches))
     except Exception as e:
         logger.error(f"Pitch detection exception: {e}")
         return None
