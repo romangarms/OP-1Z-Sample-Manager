@@ -174,11 +174,12 @@ def backup_file(logger: logging.Logger, source_path: str, vFrom: str, backup_dir
         bool: True if backup succeeded, False otherwise.
     """
     backup_path = ""
+    time_str = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
     if (backup_dir is None) or (not os.path.isdir(backup_dir)):
-        backup_path = f"{source_path}.{datetime.datetime.now().isoformat()}.{vFrom}.bak"
+        backup_path = f"{source_path}.{time_str}.{vFrom}.bak"
     else:
         base_name = os.path.basename(source_path)
-        backup_path = os.path.join(backup_dir, f"{base_name}.{datetime.datetime.now().isoformat()}.{vFrom}.bak")
+        backup_path = os.path.join(backup_dir, f"{base_name}.{time_str}.{vFrom}.bak")
 
     try:
         if os.path.exists(source_path):
