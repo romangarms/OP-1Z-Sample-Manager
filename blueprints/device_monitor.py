@@ -479,6 +479,14 @@ def scan_for_connected_devices():
     except Exception as e:
         print(f"Error scanning for USB devices: {e}")
 
+    # Clear stale config for devices that weren't found during scan
+    for device in ["opz", "op1"]:
+        with device_status_lock:
+            was_found = device_status[device]["connected"]
+        if not was_found:
+            # This will clear any stale config path via update_device_status logic
+            update_device_status(device, connected=False, path=None, usb_detected=False, mode=None)
+
 
 def start_usb_monitoring():
     """Start the USB monitoring thread."""
