@@ -6,7 +6,7 @@ This is a Flask app built to handle everything with samples on the OP-Z / OP-1. 
 
 
 ### Run app using:
-1) Have Python 3.9 - 3.14 installed. (3.13/3.14 suggested)
+1) Have Python 3.10 - 3.14 installed. (3.13/3.14 suggested)
 2) Install requirements in ```requirements.txt```.
 3) ```python main.py``` **or** build with ```python build.py```, and run the created executable under ```dist/```.
 
