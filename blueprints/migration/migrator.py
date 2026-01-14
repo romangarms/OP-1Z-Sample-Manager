@@ -1,6 +1,18 @@
+"""
+Functions in this file should not be modified unless absolutely necessary.
+They are intended as being stable utilities for migration scripts to use.
+If a change is needed in a future version, create a new migration assistance script instead.
+
+run_migrations may be a sole exception to this, as long as existing migration scripts are not affected by any changes.
+
+"""
+
+import datetime
 import logging
+import os
 import pkgutil
 import importlib
+import shutil
 from packaging import version
 
 from blueprints.github_version_file import VERSION as APP_VERSION
@@ -17,7 +29,7 @@ def run_migrations(logger: logging.Logger) -> bool:
 
     ie. If the LAST_RAN_VERSION is "v1.2.5" and the current version is "v7.3.4", it will run the migration scripts for "v2.0.0", "v3.0.0", and "v4.0.0" in that order.
 
-    Not all of them need to exist - only the ones that have changes.
+    Not all of them need to exist - only the ones that have changes that need to be migrated.
 
     Migration scripts are located in the blueprints/migration/migration_scripts/ folder.
     They must define a TARGET_VERSION string and a migrate() function.
@@ -44,6 +56,11 @@ def run_migrations(logger: logging.Logger) -> bool:
         current_version_str = APP_VERSION
         current_version = version.parse(current_version_str)
         
+        # the default of v0.0.0 will cause all migrations to run on first launch.
+        # The default should either be this or the current app version / dev version to skip all migrations on first launch.
+
+        #TODO: if making a new migrator for a future version, consider changing the default to current_version_str to skip all migrations on first launch.
+
         last_ran_version_str = get_config_setting("LAST_RAN_VERSION", "v0.0.0")
         last_ran_version = version.parse(last_ran_version_str)
     except version.InvalidVersion as e:
@@ -117,15 +134,17 @@ def run_migrations(logger: logging.Logger) -> bool:
         
         try:
             # Run the migration
-            migrate_fn()
-            
+            successful_migration = migrate_fn(logger=logger)
+            if successful_migration is False or successful_migration is None:
+                logger.error(f"Migration '{name}' ({mig_version}) reported failure.")
+                return False
+
             # IMPORTANT: Update state immediately after success.
             # If the next migration fails, we don't want to re-run this one.
             set_config_setting("LAST_RAN_VERSION", str(mig_version))
             logger.info(f"Successfully finished {name}. Config updated.")
             
         except Exception:
-            # Log the full traceback so you can actually debug it
             logger.exception(f"CRITICAL FAILURE in migration {name}")
             return False
 
@@ -135,3 +154,38 @@ def run_migrations(logger: logging.Logger) -> bool:
     logger.info("All migrations completed successfully.")
     
     return True
+
+def backup_file(logger: logging.Logger, source_path: str, vFrom: str, backup_dir: str) -> bool:
+    """
+    Utility function to back up a file from source_path to backup_dir with a versioned and dated filename.
+    Will put the file in the same directory as source_path if backup_dir is None.
+    This function should not be changed. If a change is needed in a future version, create a new migration script instead.
+    Args:
+        logger (logging.Logger): Logger instance for logging.
+        source_path (str): Path to the source file to back up.
+        vFrom (str): Version string to include in the backup filename.
+        backup_dir (str): Optional directory where the backup file will be stored.
+
+    Returns:
+        bool: True if backup succeeded, False otherwise.
+    """
+    backup_path = ""
+    if (backup_dir is None) or (not os.path.isdir(backup_dir)):
+        backup_path = f"{source_path}.{datetime.datetime.now().isoformat()}.{vFrom}.bak"
+    else:
+        base_name = os.path.basename(source_path)
+        backup_path = os.path.join(backup_dir, f"{base_name}.{datetime.datetime.now().isoformat()}.{vFrom}.bak")
+
+    try:
+        if os.path.exists(source_path):
+            logger.info(f"Backing up file from {source_path} to {backup_path}")
+            try:
+                os.replace(source_path, backup_path)
+            except Exception:
+                shutil.move(source_path, backup_path)
+        else:
+            logger.warning(f"Source file {source_path} does not exist. No backup made.")
+        return True
+    except Exception:
+        logger.exception(f"Failed to back up file from {source_path} to {backup_path}")
+        return False
