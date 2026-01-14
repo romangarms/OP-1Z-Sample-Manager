@@ -45,19 +45,32 @@ function setupDragDrop(id, type) {
     });
 }
 
-function showConvertingProgress(current, total, filename) {
+function showConvertingProgress(current, total, filename, indeterminate = false) {
     const overlay = document.getElementById('converting-overlay');
     const status = document.getElementById('converting-status');
     const progress = document.getElementById('converting-progress');
 
     overlay.classList.remove('hidden');
-    status.textContent = `Converting ${current} of ${total}: ${filename}`;
-    progress.style.width = `${(current / total) * 100}%`;
+
+    if (indeterminate) {
+        // For parallel processing, show pulsing animation
+        status.textContent = filename;
+        progress.style.width = '100%';
+        progress.classList.add('progress-bar-animated', 'progress-bar-striped');
+    } else {
+        status.textContent = `Converting ${current} of ${total}: ${filename}`;
+        progress.style.width = `${(current / total) * 100}%`;
+        progress.classList.remove('progress-bar-animated', 'progress-bar-striped');
+    }
 }
 
 function hideConvertingProgress() {
-    document.getElementById('converting-overlay').classList.add('hidden');
-    document.getElementById('converting-progress').style.width = '0%';
+    const overlay = document.getElementById('converting-overlay');
+    const progress = document.getElementById('converting-progress');
+
+    overlay.classList.add('hidden');
+    progress.style.width = '0%';
+    progress.classList.remove('progress-bar-animated', 'progress-bar-striped');
 }
 
 function getNearestNote(hz) {
@@ -114,8 +127,9 @@ async function openSettingsModal() {
 }
 
 async function handleFiles(files, type) {
-    const results = [];
     const total = files.length;
+
+    if (total === 0) return;
 
     // Check if auto-pitch is enabled for synth samples from settings
     const settings = await loadSettings();
@@ -124,62 +138,119 @@ async function handleFiles(files, type) {
     console.log('Settings loaded:', settings);
     console.log('Auto-pitch enabled:', autoPitch);
 
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        showConvertingProgress(i + 1, total, file.name);
+    // Build FormData with all files
+    const formData = new FormData();
+    for (const file of files) {
+        formData.append('files', file);
+    }
+    formData.append('type', type);
+    formData.append('auto_pitch', autoPitch ? 'true' : 'false');
 
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('type', type); // "drum" or "synth"
-        formData.append('auto_pitch', autoPitch ? 'true' : 'false');
+    // Show initial progress
+    showConvertingProgress(0, total, `Converting 0 of ${total}...`);
 
-        try {
-            const response = await fetch('/convert', {
-                method: 'POST',
-                body: formData
-            });
+    try {
+        const response = await fetch('/convert-batch', {
+            method: 'POST',
+            body: formData
+        });
 
-            const result = await response.json();
-            console.log('Conversion result:', result);
+        if (!response.ok) {
+            const data = await response.json();
+            hideConvertingProgress();
+            toast.error(data.error || 'Batch conversion failed');
+            return;
+        }
 
-            if (!response.ok) {
-                results.push(`${file.name}: Error - ${result.error || 'Conversion failed'}`);
-                toast.error(`${file.name}: ${result.error || 'Conversion failed'}`);
+        // Handle SSE stream for progress updates
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let finalResults = null;
+
+        while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+
+            // Process complete SSE messages
+            const lines = buffer.split('\n\n');
+            buffer = lines.pop(); // Keep incomplete message in buffer
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const data = JSON.parse(line.slice(6));
+
+                    if (data.type === 'progress') {
+                        // Update progress bar
+                        showConvertingProgress(
+                            data.completed,
+                            data.total,
+                            `Converting ${data.completed} of ${data.total}...`
+                        );
+                        console.log(`Progress: ${data.completed}/${data.total}`, data.result);
+                    } else if (data.type === 'complete') {
+                        finalResults = data.results;
+                    }
+                }
+            }
+        }
+
+        hideConvertingProgress();
+
+        if (!finalResults) {
+            toast.error('Conversion failed - no results received');
+            return;
+        }
+
+        // Process final results
+        let successCount = 0;
+        let errorCount = 0;
+        const failedFiles = [];
+
+        for (const result of finalResults) {
+            if (result.success) {
+                successCount++;
             } else {
-                // Display pitch correction info if available
+                errorCount++;
+                failedFiles.push(result.filename);
+            }
+        }
+
+        // Show single toast with appropriate message
+        if (total === 1) {
+            // Single file - show detailed result
+            const result = finalResults[0];
+            if (result.success) {
                 if (result.pitch_corrected && result.pitch_info) {
                     const info = result.pitch_info;
                     const note = getNearestNote(info.target_hz);
-                    const message = `Converted and tuned to ${note} (${info.detected_hz.toFixed(1)}Hz → ${info.target_hz}Hz)`;
-                    results.push(`${file.name}: ${message}`);
-                    toast.success(message, file.name);
+                    toast.success(`Converted and tuned to ${note} (${info.detected_hz.toFixed(1)}Hz → ${info.target_hz}Hz)`, result.filename);
                 } else {
-                    const message = result.message || 'Converted';
-                    results.push(`${file.name}: ${message}`);
-                    toast.success(message, file.name);
+                    toast.success('Converted successfully', result.filename);
                 }
+            } else {
+                toast.error(result.error || 'Conversion failed', result.filename);
             }
-        } catch (err) {
-            console.error('Conversion error:', err);
-            results.push(`${file.name}: Error - ${err.message}`);
-            toast.error(`${file.name}: ${err.message}`);
-        }
-    }
-
-    hideConvertingProgress();
-
-    // Show summary toast for multiple files
-    if (total > 1) {
-        const successCount = results.filter(r => r.includes('Converted')).length;
-        const errorCount = results.length - successCount;
-
-        if (errorCount === 0) {
-            toast.success(`All ${successCount} file(s) converted successfully`, 'Batch Complete');
-        } else if (successCount === 0) {
-            toast.error(`All ${errorCount} file(s) failed`, 'Batch Failed');
         } else {
-            toast.warning(`${successCount} converted, ${errorCount} failed`, 'Batch Partial');
+            // Multiple files - show summary only
+            if (errorCount === 0) {
+                toast.success(`All ${successCount} files converted successfully`, 'Batch Complete');
+            } else if (successCount === 0) {
+                toast.error(`All ${errorCount} files failed`, 'Batch Failed');
+            } else {
+                const failedList = failedFiles.length <= 3
+                    ? failedFiles.join(', ')
+                    : `${failedFiles.slice(0, 3).join(', ')} and ${failedFiles.length - 3} more`;
+                toast.warning(`${successCount} converted, ${errorCount} failed: ${failedList}`, 'Batch Partial');
+            }
         }
+    } catch (err) {
+        hideConvertingProgress();
+        console.error('Batch conversion error:', err);
+        toast.error(`Batch conversion failed: ${err.message}`);
     }
 }
 

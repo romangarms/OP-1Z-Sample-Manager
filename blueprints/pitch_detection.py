@@ -1,22 +1,26 @@
 """Pitch detection and correction utilities for sample conversion."""
+import logging
 import numpy as np
 import librosa
-from flask import current_app
+
+logger = logging.getLogger(__name__)
 
 
-def detect_pitch(audio_path):
+def detect_pitch(audio_path, max_duration=None):
     """
     Detect the fundamental frequency of an audio file.
 
     Args:
         audio_path: Path to the audio file to analyze
+        max_duration: Maximum duration in seconds to analyze (None = entire file)
 
     Returns:
         float: Median fundamental frequency in Hz, or None if detection fails
     """
     try:
         # Load audio file (librosa resamples to 22050 Hz by default, but we'll use native rate)
-        y, sr = librosa.load(audio_path, sr=None, mono=True)
+        # Limit duration to avoid processing more audio than needed
+        y, sr = librosa.load(audio_path, sr=None, mono=True, duration=max_duration)
 
         # Use pYIN algorithm for pitch detection
         # Range: A2 (110 Hz) to A6 (1760 Hz) covers typical synth samples
@@ -34,9 +38,7 @@ def detect_pitch(audio_path):
 
         return float(np.median(voiced_freqs))
     except Exception as e:
-        # Log the exception for debugging but return None gracefully
-        if current_app:
-            current_app.logger.error(f"Pitch detection exception: {e}")
+        logger.error(f"Pitch detection exception: {e}")
         return None
 
 

@@ -1,13 +1,18 @@
 import os
 import sys
+import json
+import logging
 import subprocess
 import tempfile
 import uuid
 import shutil
-from flask import Blueprint, request, jsonify, current_app
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from flask import Blueprint, request, jsonify, current_app, Response
 from .config import get_config_setting
 from .utils import run_ffmpeg
 from .pitch_detection import detect_pitch, find_nearest_a, calculate_pitch_shift_params
+
+logger = logging.getLogger(__name__)
 
 # Create Blueprint
 sample_converter_bp = Blueprint('sample_converter', __name__)
@@ -29,7 +34,7 @@ def get_converted_subfolder(sample_type):
     """Return converted subfolder path: WORKING_DIRECTORY/converted/{sample_type}/"""
     return os.path.join(get_converted_folder(), sample_type)
 
-# Helper function to convert audio files to OP-Z / OP-1 compatible format
+
 def convert_audio_file(input_path, output_path, sample_type, auto_pitch=True):
     """
     Convert an audio file to OP-Z / OP-1 compatible AIFF format.
@@ -60,7 +65,8 @@ def convert_audio_file(input_path, output_path, sample_type, auto_pitch=True):
     pitch_info = {}
     if auto_pitch and sample_type == "synth":
         try:
-            detected_hz = detect_pitch(input_path)
+            # Only analyze the portion of audio we'll actually use
+            detected_hz = detect_pitch(input_path, max_duration=max_duration)
             if detected_hz:
                 target_hz, semitones = find_nearest_a(detected_hz)
                 asetrate_ratio, atempo_ratio = calculate_pitch_shift_params(semitones)
@@ -76,11 +82,11 @@ def convert_audio_file(input_path, output_path, sample_type, auto_pitch=True):
                     "semitones_shift": round(semitones, 2)
                 }
 
-                current_app.logger.info(f"Pitch correction: {detected_hz:.2f}Hz -> {target_hz}Hz ({semitones:+.2f} semitones)")
+                logger.info(f"Pitch correction: {detected_hz:.2f}Hz -> {target_hz}Hz ({semitones:+.2f} semitones)")
             else:
-                current_app.logger.warning("Pitch detection failed - skipping pitch correction")
+                logger.warning("Pitch detection failed - skipping pitch correction")
         except Exception as e:
-            current_app.logger.warning(f"Pitch detection error: {e} - skipping pitch correction")
+            logger.warning(f"Pitch detection error: {e} - skipping pitch correction")
 
     # Always apply normalization
     filters.append("loudnorm")
@@ -100,6 +106,47 @@ def convert_audio_file(input_path, output_path, sample_type, auto_pitch=True):
     ], check=True)
 
     return pitch_info
+
+
+def _process_single_file_worker(args):
+    """
+    Worker function for parallel processing. Must be module-level for ProcessPoolExecutor.
+
+    Args:
+        args: tuple of (input_path, output_path, original_filename, sample_type, auto_pitch)
+
+    Returns:
+        dict with processing result
+    """
+    input_path, output_path, original_filename, sample_type, auto_pitch = args
+
+    result = {
+        "filename": original_filename,
+        "success": False,
+        "error": None,
+        "pitch_corrected": False,
+        "pitch_info": None
+    }
+
+    try:
+        pitch_info = convert_audio_file(input_path, output_path, sample_type, auto_pitch)
+        result["success"] = True
+        result["pitch_corrected"] = bool(pitch_info)
+        if pitch_info:
+            result["pitch_info"] = pitch_info
+    except subprocess.CalledProcessError:
+        result["error"] = "Conversion failed"
+        if os.path.exists(output_path):
+            os.remove(output_path)
+    except Exception as e:
+        result["error"] = str(e)
+        if os.path.exists(output_path):
+            os.remove(output_path)
+    finally:
+        if os.path.exists(input_path):
+            os.remove(input_path)
+
+    return result
 
 @sample_converter_bp.route("/convert", methods=["POST"])
 def convert_sample():
@@ -199,3 +246,70 @@ def delete_all_converted():
     except Exception as e:
         current_app.logger.error(f"Error deleting converted samples: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+@sample_converter_bp.route("/convert-batch", methods=["POST"])
+def convert_batch():
+    """Convert multiple audio files in parallel using multiple processes with SSE progress."""
+    files = request.files.getlist("files")
+    sample_type = request.form["type"]
+    auto_pitch = request.form.get("auto_pitch", "true") == "true"
+
+    if not files or len(files) == 0:
+        return jsonify({"error": "No files uploaded"}), 400
+
+    # Prepare output directory
+    output_dir = get_converted_subfolder(sample_type)
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Save all uploaded files and prepare worker arguments
+    worker_args = []
+    for file in files:
+        if file.filename == "":
+            continue
+        input_path = os.path.join(UPLOAD_FOLDER, str(uuid.uuid4()) + "_" + file.filename)
+        file.save(input_path)
+
+        output_filename = os.path.splitext(os.path.basename(file.filename))[0] + ".aiff"
+        output_path = os.path.join(output_dir, output_filename)
+
+        worker_args.append((input_path, output_path, file.filename, sample_type, auto_pitch))
+
+    if not worker_args:
+        return jsonify({"error": "No valid files uploaded"}), 400
+
+    total_files = len(worker_args)
+
+    def generate():
+        """Generator for SSE streaming progress updates."""
+        max_workers = min(8, (os.cpu_count() or 4))
+        completed = 0
+        results = []
+
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            futures = {executor.submit(_process_single_file_worker, args): args[2]
+                       for args in worker_args}
+
+            for future in as_completed(futures):
+                result = future.result()
+                results.append(result)
+                completed += 1
+
+                # Send progress event
+                progress_data = {
+                    "type": "progress",
+                    "completed": completed,
+                    "total": total_files,
+                    "result": result
+                }
+                yield f"data: {json.dumps(progress_data)}\n\n"
+
+        # Send final completion event with all results sorted
+        results.sort(key=lambda r: r["filename"])
+        complete_data = {
+            "type": "complete",
+            "results": results
+        }
+        yield f"data: {json.dumps(complete_data)}\n\n"
+
+    return Response(generate(), mimetype='text/event-stream')
