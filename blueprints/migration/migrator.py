@@ -47,8 +47,55 @@ def run_migrations(logger: logging.Logger) -> bool:
     """
     # We have not run the bit where we use the configured logging setting yet, so we set it to DEBUG for now.
     # It will be updated later once config is loaded.
-    logger.setLevel(logging.DEBUG)
+    current_version, last_ran_version = migration_setup(logger)
+    # Optimization: Skip import logic if versions match
+    if current_version <= last_ran_version:
+        #Don't need to do anything
+        # If they are equal, we are up to date.
+        # Otherwise, the config is ahead of the app version - possibly due to a downgrade.
+        logger.debug("System is up to date. No migrations required.")
+        return True
 
+    # 2. Load Migration Package
+    try:
+        migrations_pkg = importlib.import_module("blueprints.migration.migration_scripts")
+    except ImportError as e:
+        logger.error("Critical: 'blueprints.migration.migration_scripts' package missing. Cannot run migrations.")
+        raise MigrationError("Migration scripts package missing.") from e
+
+
+    # Handle PyInstaller/Frozen environments where __path__ might behave differently
+    pkg_path = getattr(migrations_pkg, "__path__", [])
+    # 3. Discover Scripts
+    pending_migrations = get_migration_scripts_between(
+        last_ran_version,
+        current_version,
+        logger,
+        pkg_path,
+        migrations_pkg
+    )
+
+    # 4. Sort and Execute
+    pending_migrations.sort(key=lambda t: t[0])
+    
+    if not pending_migrations:
+        logger.info(f"No migration scripts found between {last_ran_version} and {current_version}. Fast-forwarding config.")
+        set_config_setting("LAST_RAN_VERSION", str(current_version))
+        return True
+
+    logger.info(f"Found {len(pending_migrations)} pending migrations.")
+
+    do_migrations(pending_migrations, logger)
+    # 5. Final Sync
+    # Ensure we are tagged at the exact current version (handles gaps where no script existed)
+    load_config()  # Reload config to ensure we have latest settings
+    set_config_setting("LAST_RAN_VERSION", str(current_version))
+    logger.info("All migrations completed successfully.")
+    
+    return True
+
+def migration_setup(logger: logging.Logger):
+    logger.setLevel(logging.DEBUG)
     logger.info("Starting migration process...")
     load_config()
     
@@ -65,35 +112,17 @@ def run_migrations(logger: logging.Logger) -> bool:
         last_ran_version = version.parse(last_ran_version_str)
     except version.InvalidVersion as e:
         logger.error(f"Critical: Could not parse version strings. App: {APP_VERSION}, Config: {last_ran_version_str}. Error: {e}")
-        return False
+        raise MigrationError("Invalid version string encountered.") from e
     
     if current_version.is_devrelease or last_ran_version.is_devrelease:
         logger.warning("Development version detected. Migration will not be performed.")
         return True
 
     logger.info(f"Migration Check: Current App Version {current_version} | Last Ran Migration {last_ran_version}")
+    return current_version, last_ran_version
 
-    # Optimization: Skip import logic if versions match
-    if current_version <= last_ran_version:
-        #Don't need to do anything
-        # If they are equal, we are up to date.
-        # Otherwise, the config is ahead of the app version - possibly due to a downgrade.
-        logger.debug("System is up to date. No migrations required.")
-        return True
-
-    # 2. Load Migration Package
-    try:
-        migrations_pkg = importlib.import_module("blueprints.migration.migration_scripts")
-    except ImportError:
-        logger.error("Critical: 'blueprints.migration.migration_scripts' package missing. Cannot run migrations.")
-        return False
-
-    # 3. Discover Scripts
+def get_migration_scripts_between(last_ran_version, current_version, logger, pkg_path, migrations_pkg):
     pending_migrations = []
-    
-    # Handle PyInstaller/Frozen environments where __path__ might behave differently
-    pkg_path = getattr(migrations_pkg, "__path__", [])
-    
     for _, name, _ in pkgutil.iter_modules(pkg_path):
         logger.info(f"Found migration module: {name}")
         try:
@@ -113,26 +142,18 @@ def run_migrations(logger: logging.Logger) -> bool:
                 pending_migrations.append((mig_version, mod, name))
                 
         except Exception as e:
-            # Catch import errors (syntax errors in scripts, etc)
             logger.exception(f"Failed to import migration module '{name}'")
-            return False
+            raise MigrationError(f"Import error in migration module '{name}'") from e
+    return pending_migrations
 
-    # 4. Sort and Execute
-    pending_migrations.sort(key=lambda t: t[0])
-    
-    if not pending_migrations:
-        logger.info(f"No migration scripts found between {last_ran_version} and {current_version}. Fast-forwarding config.")
-        set_config_setting("LAST_RAN_VERSION", current_version_str)
-        return True
-
-    logger.info(f"Found {len(pending_migrations)} pending migrations.")
+def do_migrations(pending_migrations, logger: logging.Logger) -> bool:
 
     for mig_version, mod, name in pending_migrations:
         migrate_fn = getattr(mod, "migrate", None)
         
         if not callable(migrate_fn):
             logger.error(f"Migration '{name}' ({mig_version}) has no 'migrate()' function.")
-            return False
+            raise MigrationError(f"Missing migrate() in migration '{name}'")
             
         logger.info(f"Executing migration: {name} (Target: {mig_version})")
         
@@ -141,7 +162,7 @@ def run_migrations(logger: logging.Logger) -> bool:
             successful_migration = migrate_fn(logger=logger)
             if successful_migration is False or successful_migration is None:
                 logger.error(f"Migration '{name}' ({mig_version}) reported failure.")
-                return False
+                raise MigrationError(f"Migration '{name}' failed during execution.")
 
             # IMPORTANT: Update state immediately after success.
             # If the next migration fails, we don't want to re-run this one.
@@ -149,17 +170,9 @@ def run_migrations(logger: logging.Logger) -> bool:
             set_config_setting("LAST_RAN_VERSION", str(mig_version))
             logger.info(f"Successfully finished {name}. Config updated.")
             
-        except Exception:
+        except Exception as e:
             logger.exception(f"CRITICAL FAILURE in migration {name}")
-            return False
-
-    # 5. Final Sync
-    # Ensure we are tagged at the exact current version (handles gaps where no script existed)
-    load_config()  # Reload config to ensure we have latest settings
-    set_config_setting("LAST_RAN_VERSION", current_version_str)
-    logger.info("All migrations completed successfully.")
-    
-    return True
+            raise MigrationError(f"Critical failure in migration '{name}'") from e
 
 def backup_file(logger: logging.Logger, source_path: str, vFrom: str, backup_dir: str) -> bool:
     """
@@ -193,3 +206,7 @@ def backup_file(logger: logging.Logger, source_path: str, vFrom: str, backup_dir
     else:
         logger.warning(f"Source file {source_path} does not exist. No backup made.")
     return True
+
+class MigrationError(Exception):
+    """Custom exception for migration errors."""
+    pass

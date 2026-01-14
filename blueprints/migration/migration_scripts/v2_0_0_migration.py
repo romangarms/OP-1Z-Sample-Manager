@@ -8,7 +8,7 @@ import logging
 import os
 import sys
 import shutil
-from ..migrator import backup_file
+from ..migrator import backup_file, MigrationError
 
 TARGET_VERSION = "v2.0.0"
 
@@ -32,9 +32,9 @@ def migrate(logger: logging.Logger):
         # Ensure v2 config directory exists (v2_get_config_dir creates it)
         try:
             v2_get_config_dir()
-        except Exception:
+        except Exception as e:
             logger.exception("Unable to create or access v2 config directory: %s", v2_config_file_path)
-            return False
+            raise MigrationError("Failed to access/create v2 config directory") from e
 
         # If a v2 config already exists, move it aside as a backup
         try:
@@ -45,25 +45,25 @@ def migrate(logger: logging.Logger):
                         os.remove(v2_config_file_path)
                 else:
                     logger.error("Failed to back up existing v2 config; aborting migration")
-                    return False
+                    raise MigrationError("Failed to back up existing v2 config file")
             # Attempt to move the v1 config to the v2 path
             try:
                 if not backup_file(logger, v1_config_file_path, "v1_to_v2", None):
                     logger.error("Failed to back up v1 config; aborting migration")
-                    return False
+                    raise MigrationError("Failed to back up v1 config file")
                 try:
                     os.replace(v1_config_file_path, v2_config_file_path)
                 except Exception:
                     shutil.move(v1_config_file_path, v2_config_file_path)
-            except Exception:
+            except Exception as e:
                 logger.exception("Failed to move v1 config to v2 location")
-                return False
+                raise MigrationError("Failed to move v1 config to v2 location") from e
 
             logger.info("Successfully migrated config from %s to %s", v1_config_file_path, v2_config_file_path)
 
-        except Exception:
+        except Exception as e:
             logger.exception("Unexpected error during migration")
-            return False
+            raise MigrationError("Unexpected error during migration") from e
     else:
         logger.info("No v1 config file found; skipping config migration")
 
@@ -82,14 +82,14 @@ def migrate(logger: logging.Logger):
                         shutil.copytree(source, destination, dirs_exist_ok=True)
                     else:
                         shutil.copy2(source, destination)
-                except Exception:
-                    logger.exception(f"Failed to copy {source} to {destination}")
+                except Exception as e:
+                    logger.exception(f"Failed to copy {source} to {destination}: {e}")
 
             logger.info("Successfully migrated working directory from %s to %s", v1_work_dir, v2_work_dir)
 
-        except Exception:
+        except Exception as e:
             logger.exception("Unexpected error during working directory migration")
-            return False
+            raise MigrationError("Unexpected error during working directory migration") from e
     logger.info("Migration to v2.0.0 completed.")
     return True
 

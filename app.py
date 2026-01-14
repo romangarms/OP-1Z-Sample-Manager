@@ -41,10 +41,15 @@ def app_startup_tasks():
 
 
     # Run migrations - this relies on config being loaded, but will run before anything can use them.
-    successful_migration = migrator.run_migrations(app.logger)
+    try:
+        successful_migration = migrator.run_migrations(app.logger)
+    except migrator.MigrationError as e:
+        app.logger.error(f"Migrations failed with error: {e}")
+        successful_migration = False
     if not successful_migration:
         app.logger.error("Migrations failed - quitting startup.")
-        exit(1)
+        sys.exit(1)
+        
 
     # config
     load_config()
