@@ -38,18 +38,8 @@ app.register_blueprint(update_checker_bp)
 
 # run before server startup at the end of this file
 def app_startup_tasks():
-
-
-    # Run migrations - this relies on config being loaded, but will run before anything can use them.
-    try:
-        successful_migration = migrator.run_migrations(app.logger)
-    except migrator.MigrationError as e:
-        app.logger.error(f"Migrations failed with error: {e}")
-        successful_migration = False
-    if not successful_migration:
-        app.logger.error("Migrations failed - quitting startup.")
-        sys.exit(1)
-        
+    # Run migrations. Nothing that interacts with any other part of the app should be done before this.
+    migrator.run_startup_migrator(app.logger)
 
     # config
     load_config()
