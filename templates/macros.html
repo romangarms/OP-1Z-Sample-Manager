@@ -60,3 +60,33 @@
     </div>
 </div>
 {% endmacro %}
+
+{# Macro for settings modal - use caller() to inject page-specific settings #}
+{% macro settings_modal(title='Conversion Settings') %}
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="settingsModalTitle">{{ title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6>Pitch Correction</h6>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="setting-auto-pitch" checked>
+                        <label class="form-check-label" for="setting-auto-pitch">
+                            Auto-tune synth samples to nearest A note
+                        </label>
+                    </div>
+                    <small class="text-muted">When enabled, synth samples will automatically be pitch-corrected to the nearest A note for proper tuning on OP-1/OP-Z devices.</small>
+                </div>
+                {{ caller() }}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
