@@ -50,6 +50,7 @@ def run_migrations(logger: logging.Logger) -> bool:
     logger.setLevel(logging.DEBUG)
 
     logger.info("Starting migration process...")
+    load_config()
     
     # 1. Resolve Versions
     try:
@@ -60,9 +61,6 @@ def run_migrations(logger: logging.Logger) -> bool:
         # The default should either be this or the current app version / dev version to skip all migrations on first launch.
 
         #TODO: if making a new migrator for a future version, consider changing the default to current_version_str to skip all migrations on first launch.
-
-
-        load_config()
         last_ran_version_str = get_config_setting("LAST_RAN_VERSION", "v0.0.0")
         last_ran_version = version.parse(last_ran_version_str)
     except version.InvalidVersion as e:
@@ -76,6 +74,9 @@ def run_migrations(logger: logging.Logger) -> bool:
 
     # Optimization: Skip import logic if versions match
     if current_version <= last_ran_version:
+        #Don't need to do anything
+        # If they are equal, we are up to date.
+        # Otherwise, the config is ahead of the app version - possibly due to a downgrade.
         logger.debug("System is up to date. No migrations required.")
         return True
 
