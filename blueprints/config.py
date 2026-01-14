@@ -32,6 +32,7 @@ def get_config_path():
 
 CONFIG_PATH = get_config_path()
 app_config = {}
+config_load_error = None  # Stores error details if config fails to load
 
 
 def get_default_working_directory(project_name):
@@ -102,10 +103,20 @@ def run_all_config_tasks():
 
 # Function to load the configuration from a JSON file
 def load_config():
+    global config_load_error
+    config_load_error = None  # Reset error state
     if os.path.exists(CONFIG_PATH):
-        loaded = read_json_from_path(CONFIG_PATH)
-        app_config.clear()
-        app_config.update(loaded)
+        try:
+            loaded = read_json_from_path(CONFIG_PATH)
+            app_config.clear()
+            app_config.update(loaded)
+        except json.JSONDecodeError as e:
+            config_load_error = {
+                "message": f"Invalid JSON in config file: {e.msg}",
+                "line": e.lineno,
+                "column": e.colno
+            }
+            app_config.clear()  # Start with empty config
     return app_config
 
 # Function to save the configuration to a JSON file
@@ -239,9 +250,19 @@ def remove_config_setting_route():
 
 @config_bp.route('/reset-config', methods=['POST'])
 def reset_config_flask():
+    global config_load_error
     delete_config_setting("OPZ_MOUNT_PATH", save=False)
     reset_config()
+    config_load_error = None  # Clear error state after reset
     return jsonify({"success": True, "message": "Configuration reset successfully"})
+
+
+@config_bp.route('/config-status')
+def get_config_status():
+    """Check if config loaded successfully."""
+    if config_load_error:
+        return jsonify({"ok": False, "error": config_load_error})
+    return jsonify({"ok": True})
 
 
 @config_bp.route('/open-config-in-editor', methods=['POST'])

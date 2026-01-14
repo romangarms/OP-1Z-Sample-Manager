@@ -57,6 +57,26 @@
         </div>
     </div>
 
+    <!-- Config Error Modal (non-dismissable) -->
+    <div class="modal fade" id="configErrorModal" tabindex="-1" aria-labelledby="configErrorModalTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="configErrorModalTitle">Configuration Error</h5>
+                </div>
+                <div class="modal-body" id="configErrorModalBody">
+                    <p>The configuration file could not be loaded because it contains invalid JSON.</p>
+                    <p id="configErrorDetails" class="text-muted small"></p>
+                    <p>You can either edit the config file manually to fix the issue, or reset it to start fresh.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="configErrorEditBtn">Edit Config</button>
+                    <button type="button" class="btn btn-danger" id="configErrorResetBtn">Reset Config</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         {% block main %}{% endblock %}
     </div>
@@ -67,6 +87,7 @@
     <!-- Global UI components (available on all pages) -->
     <script src="/static/js/components/toast.js"></script>
     <script src="/static/js/components/confirm-modal.js"></script>
+    <script src="/static/js/components/config-error-modal.js"></script>
     <script src="/static/js/components/device-status.js"></script>
 
     <!-- Update checker (runs once per load, server-side cooldown) -->
