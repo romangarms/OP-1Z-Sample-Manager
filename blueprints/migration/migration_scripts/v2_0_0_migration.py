@@ -128,8 +128,10 @@ def v1_get_config_dir():
     else:
         config_dir = os.path.expanduser('~/.config/OP-Z Sample Manager')
 
+    #Actualy dont do this, we just want the path
+
     # Create directory if it doesn't exist
-    os.makedirs(config_dir, exist_ok=True)
+    #os.makedirs(config_dir, exist_ok=True)
     return config_dir
 
 def v1_get_config_path():
