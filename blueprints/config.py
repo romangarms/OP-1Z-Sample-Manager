@@ -34,7 +34,7 @@ CONFIG_PATH = get_config_path()
 app_config = {}
 
 
-def get_default_working_directory(*, project_name):
+def get_default_working_directory(project_name):
     """Return default working directory: ~/Documents/<project_name>/"""
     if sys.platform == 'win32':
         # On Windows, use registry or USERPROFILE to find actual Documents folder
