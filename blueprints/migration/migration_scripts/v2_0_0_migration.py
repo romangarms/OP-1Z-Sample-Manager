@@ -34,7 +34,7 @@ def migrate(logger: logging.Logger):
             v2_get_config_dir()
         except Exception:
             logger.exception("Unable to create or access v2 config directory: %s", v2_config_file_path)
-            return
+            return False
 
         # If a v2 config already exists, move it aside as a backup
         try:
@@ -48,7 +48,9 @@ def migrate(logger: logging.Logger):
                     return False
             # Attempt to move the v1 config to the v2 path
             try:
-                backup_file(logger, v1_config_file_path, "v1_to_v2", None)
+                if not backup_file(logger, v1_config_file_path, "v1_to_v2", None):
+                    logger.error("Failed to back up v1 config; aborting migration")
+                    return False
                 try:
                     os.replace(v1_config_file_path, v2_config_file_path)
                 except Exception:

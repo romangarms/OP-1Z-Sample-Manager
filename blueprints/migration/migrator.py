@@ -69,6 +69,7 @@ def run_migrations(logger: logging.Logger) -> bool:
     
     if current_version.is_devrelease or last_ran_version.is_devrelease:
         logger.warning("Development version detected. Migration will not be performed.")
+        return True
 
     logger.info(f"Migration Check: Current App Version {current_version} | Last Ran Migration {last_ran_version}")
 
