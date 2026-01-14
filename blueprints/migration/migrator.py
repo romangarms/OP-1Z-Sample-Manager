@@ -27,7 +27,7 @@ def run_migrations(logger: logging.Logger) -> bool:
 
     It will run any migration scripts between the "LAST_RAN_VERSION" and the current application version defined in the github_version_file.
 
-    ie. If the LAST_RAN_VERSION is "v1.2.5" and the current version is "v7.3.4", it will run the migration scripts for "v2.0.0", "v3.0.0", and "v4.0.0" in that order.
+    ie. If the LAST_RAN_VERSION is "v1.2.5" and the current version is "v7.3.4", it will run the migration scripts for "v2.0.0", "v3.0.0", "v4.0.0", "v5.0.0", "v6.0.0", and "v7.0.0" (if they exist) in that order.
 
     Not all of them need to exist - only the ones that have changes that need to be migrated.
 
