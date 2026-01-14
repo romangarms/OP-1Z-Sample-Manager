@@ -55,6 +55,12 @@ def run_migrations(logger: logging.Logger) -> bool:
         # Otherwise, the config is ahead of the app version - possibly due to a downgrade.
         logger.debug("System is up to date. No migrations required.")
         return True
+    
+    if current_version.is_devrelease or last_ran_version.is_devrelease:
+        logger.warning("Development version detected. Migration will not be performed.")
+        return True
+
+    logger.info(f"Migration Check: Current App Version {current_version} | Last Ran Migration {last_ran_version}")
 
     # 2. Load Migration Package
     try:
@@ -102,23 +108,18 @@ def migration_setup(logger: logging.Logger):
     # 1. Resolve Versions
     try:
         current_version_str = APP_VERSION
-        current_version = version.parse(current_version_str)
-        
+
         # the default of v0.0.0 will cause all migrations to run on first launch.
         # The default should either be this or the current app version / dev version to skip all migrations on first launch.
 
         #TODO: if making a new migrator for a future version, consider changing the default to current_version_str to skip all migrations on first launch.
         last_ran_version_str = get_config_setting("LAST_RAN_VERSION", "v0.0.0")
+
+        current_version = version.parse(current_version_str)
         last_ran_version = version.parse(last_ran_version_str)
     except version.InvalidVersion as e:
-        logger.error(f"Critical: Could not parse version strings. App: {APP_VERSION}, Config: {last_ran_version_str}. Error: {e}")
+        logger.error(f"Critical: Could not parse version strings. App: {current_version_str}, Config: {last_ran_version_str}. Error: {e}")
         raise MigrationError("Invalid version string encountered.") from e
-    
-    if current_version.is_devrelease or last_ran_version.is_devrelease:
-        logger.warning("Development version detected. Migration will not be performed.")
-        return True
-
-    logger.info(f"Migration Check: Current App Version {current_version} | Last Ran Migration {last_ran_version}")
     return current_version, last_ran_version
 
 def get_migration_scripts_between(last_ran_version, current_version, logger, pkg_path, migrations_pkg):
