@@ -13,12 +13,13 @@ import os
 import pkgutil
 import importlib
 import shutil
+import sys
 from packaging import version
 
 from blueprints.github_version_file import VERSION as APP_VERSION
 from blueprints.config import get_config_setting, load_config, set_config_setting
 
-def run_migrations(logger: logging.Logger) -> bool:
+def execute_migration(logger: logging.Logger) -> bool:
     """
     This function runs any migration tasks needed to update
     the application's data/configuration to the latest version.
@@ -207,6 +208,17 @@ def backup_file(logger: logging.Logger, source_path: str, vFrom: str, backup_dir
     else:
         logger.warning(f"Source file {source_path} does not exist. No backup made.")
     return True
+
+def run_startup_migrator(logger: logging.Logger):
+    try:
+        successful_migration = execute_migration(logger)
+    except MigrationError as e:
+        logger.error(f"Migrations failed with error: {e}")
+        successful_migration = False
+    if not successful_migration:
+        logger.error("Migrations failed - quitting startup.")
+        sys.exit(1)
+        
 
 class MigrationError(Exception):
     """Custom exception for migration errors."""
