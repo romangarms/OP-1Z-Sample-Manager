@@ -81,13 +81,13 @@ def migrate(logger: logging.Logger):
                         shutil.copy2(source, destination)
                 except Exception:
                     logger.exception(f"Failed to copy {source} to {destination}")
-
+                    
             logger.info("Successfully migrated working directory from %s to %s", v1_work_dir, v2_work_dir)
 
         except Exception:
             logger.exception("Unexpected error during working directory migration")
             return False
-
+    logger.info("Migration to v2.0.0 completed.")
     return True
 
 
