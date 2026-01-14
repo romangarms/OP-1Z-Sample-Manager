@@ -48,7 +48,10 @@ def execute_migration(logger: logging.Logger) -> bool:
     """
     # We have not run the bit where we use the configured logging setting yet, so we set it to DEBUG for now.
     # It will be updated later once config is loaded.
-    current_version, last_ran_version = migration_setup(logger)
+    logger.setLevel(logging.DEBUG)
+    logger.info("Starting migration process...")
+
+    current_version, last_ran_version = parse_versions(logger)
     # Optimization: Skip import logic if versions match
     if current_version <= last_ran_version:
         #Don't need to do anything
@@ -101,11 +104,7 @@ def execute_migration(logger: logging.Logger) -> bool:
     
     return True
 
-def migration_setup(logger: logging.Logger):
-    logger.setLevel(logging.DEBUG)
-    logger.info("Starting migration process...")
-    load_config()
-    
+def parse_versions(logger: logging.Logger):
     # 1. Resolve Versions
     try:
         current_version_str = APP_VERSION
@@ -210,6 +209,10 @@ def backup_file(logger: logging.Logger, source_path: str, vFrom: str, backup_dir
     return True
 
 def run_startup_migrator(logger: logging.Logger):
+    load_config()
+    if get_config_setting("SKIP_MIGRATIONS_ON_STARTUP"):
+        logger.info("Skipping migrations on startup as per configuration.")
+        return
     try:
         successful_migration = execute_migration(logger)
     except MigrationError as e:
