@@ -13,15 +13,16 @@ import subprocess
 from queue import Queue
 from flask import Blueprint, Response, jsonify, current_app, request
 from .config import get_config_setting, set_config_setting
+from .devices import OP_Z, OP_1, get_device_by_id
 
 # Create Blueprint
 device_monitor_bp = Blueprint('device_monitor', __name__)
 
-# Teenage Engineering USB Identifiers (decimal values)
-TE_VENDOR_ID = 9063         # 0x2367
-OPZ_PRODUCT_ID = 12         # 0x000c - OP-Z (both normal and disk mode use same ID)
-OP1_PRODUCT_ID = 2          # 0x0002 - USB Storage mode
-OP1_PRODUCT_ID_OTHER = 4    # 0x0004 - Normal/MIDI mode (no disk access)
+# Teenage Engineering USB Identifiers (decimal values) - now imported from devices module
+TE_VENDOR_ID = OP_Z.usb_vendor_id  # 0x2367 - same for both devices
+OPZ_PRODUCT_ID = OP_Z.usb_product_ids[0]  # 0x000c - OP-Z (both normal and disk mode use same ID)
+OP1_PRODUCT_ID = OP_1.usb_product_ids[0]  # 0x0002 - USB Storage mode
+OP1_PRODUCT_ID_OTHER = OP_1.usb_product_ids[1]  # 0x0004 - Normal/MIDI mode (no disk access)
 
 # USB class identifiers for distinguishing device modes
 USB_CLASS_STORAGE = "USBSTOR"  # Mass storage class
@@ -94,7 +95,8 @@ def validate_device_folder_structure(device, mount_path):
         "5-bass", "6-lead", "7-arpeggio", "8-chord"
     ]
 
-    device_name = "OP-1" if device == "op1" else "OP-Z"
+    device_obj = get_device_by_id(device)
+    device_name = device_obj.name if device_obj else ("OP-1" if device == "op1" else "OP-Z")
 
     if not mount_path:
         return False, f"Please connect your {device_name} and try again. If it isn't being detected, go to Utility Settings, enable developer mode, and select the device path."
@@ -251,7 +253,8 @@ def update_device_status(device, connected, path=None, usb_detected=False, mode=
 
     # Only broadcast if status changed
     if old_status != new_status:
-        device_name = "OP-1" if device == "op1" else "OP-Z"
+        device_obj = get_device_by_id(device)
+        device_name = device_obj.name if device_obj else ("OP-1" if device == "op1" else "OP-Z")
         print(f"Broadcasting SSE: {device_name} connected={connected}, path={path}, mode={mode}")
         broadcast_sse_event("device_status", {
             "device": device,
@@ -554,8 +557,8 @@ def get_device_status():
         }
 
     # Add device display names
-    status["opz"]["device_name"] = "OP-Z"
-    status["op1"]["device_name"] = "OP-1"
+    status["opz"]["device_name"] = OP_Z.name
+    status["op1"]["device_name"] = OP_1.name
 
     return jsonify(status)
 
@@ -579,7 +582,8 @@ def device_events():
                 import json
                 for device in ["opz", "op1"]:
                     status = device_status[device].copy()
-                    device_name = "OP-1" if device == "op1" else "OP-Z"
+                    device_obj = get_device_by_id(device)
+                    device_name = device_obj.name if device_obj else device.upper()
                     event_data = json.dumps({
                         "type": "device_status",
                         "device": device,
