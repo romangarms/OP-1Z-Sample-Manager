@@ -43,7 +43,7 @@ def app_startup_tasks():
     # Run migrations - this relies on config being loaded, but will run before anything can use them.
     successfull_migration = migrator.run_migrations(app.logger)
     if not successfull_migration:
-        print("Migrations failed - exiting startup.")
+        app.logger.error("Migrations failed - quitting startup.")
         exit(1)
 
     # config
