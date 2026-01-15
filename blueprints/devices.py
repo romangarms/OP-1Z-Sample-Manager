@@ -5,7 +5,13 @@ Centralized device configuration for OP-Z and OP-1 devices.
 Provides a single source of truth for device names, constants, and capabilities.
 """
 from dataclasses import dataclass
-from typing import Optional
+
+
+class DeviceNotFoundError(Exception):
+    """Raised when a device ID is not recognized in the configuration."""
+    def __init__(self, device_id: str):
+        self.device_id = device_id
+        super().__init__(f"Unknown device identifier: '{device_id}'")
 
 
 @dataclass(frozen=True)
@@ -77,20 +83,23 @@ OP_1 = Device(
 )
 
 
-def get_device_by_id(device_id: str) -> Optional[Device]:
+def get_device_by_id(device_id: str) -> Device:
     """Get device configuration by ID.
     
     Args:
         device_id: Device identifier ("opz" or "op1")
         
     Returns:
-        Device object if found, None otherwise
+        Device object for the given ID
+        
+    Raises:
+        DeviceNotFoundError: If device_id is not recognized
     """
     if device_id == "opz":
         return OP_Z
     elif device_id == "op1":
         return OP_1
-    return None
+    raise DeviceNotFoundError(device_id)
 
 
 def get_all_devices() -> tuple[Device, Device]:
