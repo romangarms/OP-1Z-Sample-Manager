@@ -76,11 +76,7 @@ def get_device_config(device=None):
     """
     if device is None:
         device = get_config_setting(CONFIG_SELECTED_DEVICE)
-    device_obj = get_device_by_id(device)
-    if device_obj:
-        return get_device_mount_path(device), device_obj.name
-    # Fallback for unknown devices
-    return get_device_mount_path(device), device.upper()
+    return get_device_mount_path(device), get_device_by_id(device).name
 
 
 def sanitize_and_validate_path(allowed_base, *path_components):

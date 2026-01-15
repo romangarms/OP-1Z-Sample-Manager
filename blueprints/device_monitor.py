@@ -105,8 +105,7 @@ def validate_device_folder_structure(device, mount_path):
         "5-bass", "6-lead", "7-arpeggio", "8-chord"
     ]
 
-    device_obj = get_device_by_id(device)
-    device_name = device_obj.name if device_obj else ("OP-1" if device == "op1" else "OP-Z")
+    device_name = get_device_by_id(device).name
 
     if not mount_path:
         return False, f"Please connect your {device_name} and try again. If it isn't being detected, go to Utility Settings, enable developer mode, and select the device path."
@@ -263,8 +262,7 @@ def update_device_status(device, connected, path=None, usb_detected=False, mode=
 
     # Only broadcast if status changed
     if old_status != new_status:
-        device_obj = get_device_by_id(device)
-        device_name = device_obj.name if device_obj else ("OP-1" if device == "op1" else "OP-Z")
+        device_name = get_device_by_id(device).name
         print(f"Broadcasting SSE: {device_name} connected={connected}, path={path}, mode={mode}")
         broadcast_sse_event("device_status", {
             "device": device,
@@ -592,8 +590,7 @@ def device_events():
                 import json
                 for device in ["opz", "op1"]:
                     status = device_status[device].copy()
-                    device_obj = get_device_by_id(device)
-                    device_name = device_obj.name if device_obj else device.upper()
+                    device_name = get_device_by_id(device).name
                     event_data = json.dumps({
                         "type": "device_status",
                         "device": device,
