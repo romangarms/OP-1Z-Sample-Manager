@@ -10,6 +10,13 @@
     flex: 1;
     min-width: 300px;
     margin: 0 10px;
+    display: flex;
+}
+
+.samplepackbox {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .samplepackbox h3 {
@@ -21,6 +28,7 @@
 }
 
 .drop-zone {
+    flex: 1;
     min-height: 250px;
     display: flex;
     flex-direction: column;
