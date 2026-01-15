@@ -8,6 +8,7 @@ from flask import Blueprint, request, jsonify, current_app, send_file
 from .config import get_config_setting, get_device_mount_path
 from .sample_converter import convert_audio_file, UPLOAD_FOLDER
 from .utils import get_unique_filepath, run_ffmpeg
+from .devices import OP_Z, OP_1, get_device_by_id
 
 # Create Blueprint
 sample_manager_bp = Blueprint('sample_manager', __name__)
@@ -44,14 +45,15 @@ def get_sample_type_from_category(category):
     return "drum" if category in drum_categories else "synth"
 
 
-# Device storage constants
-OPZ_STORAGE_KB = 24000  # 24 MB in KB
-OP1_STORAGE_KB = 512000  # 512 MB in KB
+# Device storage constants - now imported from devices module
+# Legacy constants kept for backwards compatibility (will be removed in future)
+OPZ_STORAGE_KB = OP_Z.storage_kb
+OP1_STORAGE_KB = OP_1.storage_kb
 
-# OP-1 sample/patch limits
-OP1_DRUM_SAMPLE_LIMIT = 42
-OP1_SYNTH_SAMPLE_LIMIT = 42
-OP1_PATCH_LIMIT = 100
+# OP-1 sample/patch limits - now imported from devices module
+OP1_DRUM_SAMPLE_LIMIT = OP_1.sample_limits["drum_samples"]
+OP1_SYNTH_SAMPLE_LIMIT = OP_1.sample_limits["synth_samples"]
+OP1_PATCH_LIMIT = OP_1.sample_limits["patches"]
 
 
 def get_device_config(device=None):
@@ -64,10 +66,8 @@ def get_device_config(device=None):
         tuple: (mount_path, device_name)
     """
     if device is None:
-        device = get_config_setting("SELECTED_DEVICE")
-    if device == "op1":
-        return get_device_mount_path("op1"), "OP-1"
-    return get_device_mount_path("opz"), "OP-Z"
+        device = get_config_setting(CONFIG_SELECTED_DEVICE)
+    return get_device_mount_path(device), get_device_by_id(device).name
 
 
 def sanitize_and_validate_path(allowed_base, *path_components):
