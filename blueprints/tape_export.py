@@ -10,14 +10,8 @@ import shutil
 import tempfile
 from flask import Blueprint, request, jsonify, current_app, send_file
 from .config import get_device_mount_path
+from .constants import TapeAlbum, Directories, Files, Extensions
 from .utils import (
-    TAPE_TRACK_IDS,
-    ALBUM_SIDE_IDS,
-    TAPE_DIR,
-    ALBUM_DIR,
-    TAPE_TRACK_PREFIX,
-    ALBUM_SIDE_PREFIX,
-    AIFF_EXTENSION,
     EXPORT_TAPE_PREFIX,
     EXPORT_ALBUM_PREFIX,
     get_unique_filepath,
@@ -43,9 +37,9 @@ def get_op1_mount_path():
 def get_source_path(track_type, track_id, mount_path):
     """Get the source AIFF file path for a track."""
     if track_type == "tape":
-        return os.path.join(mount_path, TAPE_DIR, f"{TAPE_TRACK_PREFIX}{track_id}{AIFF_EXTENSION}")
+        return os.path.join(mount_path, Directories.OP1.TAPE, f"{Files.OP1.TAPE_TRACK_PREFIX}{track_id}{Extensions.AIF}")
     elif track_type == "album":
-        return os.path.join(mount_path, ALBUM_DIR, f"{ALBUM_SIDE_PREFIX}{track_id}{AIFF_EXTENSION}")
+        return os.path.join(mount_path, Directories.OP1.ALBUM, f"{Files.OP1.ALBUM_SIDE_PREFIX}{track_id}{Extensions.AIF}")
     return None
 
 
@@ -80,11 +74,11 @@ def get_tape_tracks():
     if not mount_path:
         return jsonify({"error": "OP-1 not mounted"}), 400
 
-    tape_path = os.path.join(mount_path, TAPE_DIR)
+    tape_path = os.path.join(mount_path, Directories.OP1.TAPE)
     tracks = []
 
-    for i in TAPE_TRACK_IDS:
-        filename = f"{TAPE_TRACK_PREFIX}{i}{AIFF_EXTENSION}"
+    for i in TapeAlbum.TRACK_IDS:
+        filename = f"{Files.OP1.TAPE_TRACK_PREFIX}{i}{Extensions.AIF}"
         track_file = os.path.join(tape_path, filename)
         if os.path.exists(track_file):
             tracks.append({
@@ -114,11 +108,11 @@ def get_album_tracks():
     if not mount_path:
         return jsonify({"error": "OP-1 not mounted"}), 400
 
-    album_path = os.path.join(mount_path, ALBUM_DIR)
+    album_path = os.path.join(mount_path, Directories.OP1.ALBUM)
     sides = []
 
-    for side in ALBUM_SIDE_IDS:
-        filename = f"{ALBUM_SIDE_PREFIX}{side}{AIFF_EXTENSION}"
+    for side in TapeAlbum.SIDE_IDS:
+        filename = f"{Files.OP1.ALBUM_SIDE_PREFIX}{side}{Extensions.AIF}"
         side_file = os.path.join(album_path, filename)
         if os.path.exists(side_file):
             sides.append({
@@ -155,11 +149,11 @@ def prepare_audio():
     files_to_check = []
 
     # Tape tracks
-    for i in TAPE_TRACK_IDS:
+    for i in TapeAlbum.TRACK_IDS:
         files_to_check.append(("tape", str(i)))
 
     # Album sides
-    for side in ALBUM_SIDE_IDS:
+    for side in TapeAlbum.SIDE_IDS:
         files_to_check.append(("album", side))
 
     # Check which files need conversion
@@ -212,10 +206,10 @@ def serve_tape_audio(track_type, track_id):
 
     # Validate track type and ID
     if track_type == "tape":
-        if track_id not in [str(i) for i in TAPE_TRACK_IDS]:
+        if track_id not in [str(i) for i in TapeAlbum.TRACK_IDS]:
             return jsonify({"error": "Invalid track ID"}), 400
     elif track_type == "album":
-        if track_id not in ALBUM_SIDE_IDS:
+        if track_id not in TapeAlbum.SIDE_IDS:
             return jsonify({"error": "Invalid side ID"}), 400
     else:
         return jsonify({"error": "Invalid track type"}), 400
@@ -259,30 +253,30 @@ def export_tape():
     errors = []
 
     if export_type == "tape":
-        source_dir = os.path.join(mount_path, TAPE_DIR)
-        for i in TAPE_TRACK_IDS:
-            src = os.path.join(source_dir, f"{TAPE_TRACK_PREFIX}{i}{AIFF_EXTENSION}")
+        source_dir = os.path.join(mount_path, Directories.OP1.TAPE)
+        for i in TapeAlbum.TRACK_IDS:
+            src = os.path.join(source_dir, f"{Files.OP1.TAPE_TRACK_PREFIX}{i}{Extensions.AIF}")
             if os.path.exists(src):
-                base_dst = os.path.join(downloads_path, f"{EXPORT_TAPE_PREFIX}{i}{AIFF_EXTENSION}")
+                base_dst = os.path.join(downloads_path, f"{EXPORT_TAPE_PREFIX}{i}{Extensions.AIF}")
                 dst = get_unique_filepath(base_dst)
                 try:
                     shutil.copy2(src, dst)
                     exported_files.append(os.path.basename(dst))
                 except Exception as e:
-                    errors.append(f"{TAPE_TRACK_PREFIX}{i}{AIFF_EXTENSION}: {str(e)}")
+                    errors.append(f"{Files.OP1.TAPE_TRACK_PREFIX}{i}{Extensions.AIF}: {str(e)}")
 
     elif export_type == "album":
-        source_dir = os.path.join(mount_path, ALBUM_DIR)
-        for side in ALBUM_SIDE_IDS:
-            src = os.path.join(source_dir, f"{ALBUM_SIDE_PREFIX}{side}{AIFF_EXTENSION}")
+        source_dir = os.path.join(mount_path, Directories.OP1.ALBUM)
+        for side in TapeAlbum.SIDE_IDS:
+            src = os.path.join(source_dir, f"{Files.OP1.ALBUM_SIDE_PREFIX}{side}{Extensions.AIF}")
             if os.path.exists(src):
-                base_dst = os.path.join(downloads_path, f"{EXPORT_ALBUM_PREFIX}{side}{AIFF_EXTENSION}")
+                base_dst = os.path.join(downloads_path, f"{EXPORT_ALBUM_PREFIX}{side}{Extensions.AIF}")
                 dst = get_unique_filepath(base_dst)
                 try:
                     shutil.copy2(src, dst)
                     exported_files.append(os.path.basename(dst))
                 except Exception as e:
-                    errors.append(f"{ALBUM_SIDE_PREFIX}{side}{AIFF_EXTENSION}: {str(e)}")
+                    errors.append(f"{Files.OP1.ALBUM_SIDE_PREFIX}{side}{Extensions.AIF}: {str(e)}")
     else:
         return jsonify({"error": "Invalid export type"}), 400
 

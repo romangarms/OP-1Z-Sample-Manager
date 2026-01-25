@@ -12,14 +12,8 @@ import tempfile
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app, send_file
 from .config import get_config_setting, get_device_mount_path, read_json_from_path, write_json_to_path
-from .constants import CONFIG_WORKING_DIRECTORY
-from .utils import (
-    TAPE_TRACK_IDS,
-    TAPE_DIR,
-    TAPE_TRACK_PREFIX,
-    AIFF_EXTENSION,
-    run_ffmpeg,
-)
+from .constants import Config, TapeAlbum, Directories, Files, Extensions
+from .utils import run_ffmpeg
 
 # Create Blueprint
 backup_bp = Blueprint('backup', __name__)
@@ -34,7 +28,7 @@ IGNORE_PATTERNS = ['.DS_Store', '.Spotlight-V100', '.Trashes', '._*']
 
 def get_backups_base_path(device):
     """Get the base path for backups: WORKING_DIRECTORY/backups/{device}/"""
-    working_dir = get_config_setting(CONFIG_WORKING_DIRECTORY)
+    working_dir = get_config_setting(Config.WORKING_DIRECTORY)
     return os.path.join(working_dir, "backups", device)
 
 
@@ -130,7 +124,7 @@ def get_backup_cache_path(device, timestamp, track_id):
 
 def get_backup_source_path(backup_path, track_id):
     """Get the source AIFF file path for a tape track in a backup."""
-    return os.path.join(backup_path, TAPE_DIR, f"{TAPE_TRACK_PREFIX}{track_id}{AIFF_EXTENSION}")
+    return os.path.join(backup_path, Directories.OP1.TAPE, f"{Files.OP1.TAPE_TRACK_PREFIX}{track_id}{Extensions.AIF}")
 
 
 def needs_conversion(source_path, cache_path):
@@ -382,7 +376,7 @@ def prepare_backup_preview(device, timestamp):
 
     tracks = []
 
-    for track_id in TAPE_TRACK_IDS:
+    for track_id in TapeAlbum.TRACK_IDS:
         source_path = get_backup_source_path(backup_path, track_id)
         cache_path = get_backup_cache_path(device, timestamp, track_id)
 
@@ -415,7 +409,7 @@ def serve_backup_audio(device, timestamp, track_id):
     if device != "op1":
         return jsonify({"error": "Preview only available for OP-1"}), 400
 
-    if track_id not in TAPE_TRACK_IDS:
+    if track_id not in TapeAlbum.TRACK_IDS:
         return jsonify({"error": "Invalid track ID"}), 400
 
     backup_path = get_backup_path(device, timestamp)
@@ -444,9 +438,9 @@ def serve_backup_audio(device, timestamp, track_id):
 def open_backups_folder():
     """Open the backups folder in the file explorer."""
     import platform
-    from .constants import CONFIG_WORKING_DIRECTORY
+    from .constants import Config.WORKING_DIRECTORY
 
-    backups_base = os.path.join(get_config_setting(CONFIG_WORKING_DIRECTORY), "backups")
+    backups_base = os.path.join(get_config_setting(Config.WORKING_DIRECTORY), "backups")
 
     # Create the folder if it doesn't exist
     os.makedirs(backups_base, exist_ok=True)

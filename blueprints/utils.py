@@ -1,17 +1,8 @@
 """Shared utilities for blueprint modules."""
 import os
 import sys
-from .constants import (
-    TAPE_TRACK_IDS,
-    ALBUM_SIDE_IDS,
-    TAPE_DIR,
-    ALBUM_DIR,
-    TAPE_TRACK_PREFIX,
-    ALBUM_SIDE_PREFIX,
-    AIFF_EXTENSION,
-)
 
-# Export tape constants for backward compatibility
+# Export tape constants
 EXPORT_TAPE_PREFIX = "op1_tape_track_"
 EXPORT_ALBUM_PREFIX = "op1_album_side_"
 
