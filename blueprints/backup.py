@@ -12,6 +12,7 @@ import tempfile
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app, send_file
 from .config import get_config_setting, get_device_mount_path, read_json_from_path, write_json_to_path
+from .constants import CONFIG_WORKING_DIRECTORY
 from .utils import (
     TAPE_TRACK_IDS,
     TAPE_DIR,
@@ -33,7 +34,7 @@ IGNORE_PATTERNS = ['.DS_Store', '.Spotlight-V100', '.Trashes', '._*']
 
 def get_backups_base_path(device):
     """Get the base path for backups: WORKING_DIRECTORY/backups/{device}/"""
-    working_dir = get_config_setting("WORKING_DIRECTORY")
+    working_dir = get_config_setting(CONFIG_WORKING_DIRECTORY)
     return os.path.join(working_dir, "backups", device)
 
 
@@ -443,8 +444,9 @@ def serve_backup_audio(device, timestamp, track_id):
 def open_backups_folder():
     """Open the backups folder in the file explorer."""
     import platform
+    from .constants import CONFIG_WORKING_DIRECTORY
 
-    backups_base = os.path.join(get_config_setting("WORKING_DIRECTORY"), "backups")
+    backups_base = os.path.join(get_config_setting(CONFIG_WORKING_DIRECTORY), "backups")
 
     # Create the folder if it doesn't exist
     os.makedirs(backups_base, exist_ok=True)
