@@ -438,7 +438,6 @@ def serve_backup_audio(device, timestamp, track_id):
 def open_backups_folder():
     """Open the backups folder in the file explorer."""
     import platform
-    from .constants import Config.WORKING_DIRECTORY
 
     backups_base = os.path.join(get_config_setting(Config.WORKING_DIRECTORY), "backups")
 
