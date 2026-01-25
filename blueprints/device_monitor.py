@@ -14,6 +14,7 @@ from queue import Queue
 from flask import Blueprint, Response, jsonify, current_app, request
 from .config import get_config_setting, set_config_setting
 from .devices import OP_Z, OP_1, get_device_by_id
+from .constants import Config, Directories
 
 # Create Blueprint
 device_monitor_bp = Blueprint('device_monitor', __name__)
@@ -105,8 +106,8 @@ def validate_device_folder_structure(device, mount_path):
 
     if device == "op1":
         # OP-1: Check for drum/ and synth/ directories
-        drum_path = os.path.join(mount_path, "drum")
-        synth_path = os.path.join(mount_path, "synth")
+        drum_path = os.path.join(mount_path, Directories.OP1.DRUM)
+        synth_path = os.path.join(mount_path, Directories.OP1.SYNTH)
 
         if not os.path.exists(drum_path) or not os.path.isdir(drum_path):
             return False, "Invalid OP-1 folder: 'drum' directory not found."
@@ -115,7 +116,7 @@ def validate_device_folder_structure(device, mount_path):
             return False, "Invalid OP-1 folder: 'synth' directory not found."
     else:
         # OP-Z: Check for samplepacks/ directory with category folders
-        samplepacks_path = os.path.join(mount_path, "samplepacks")
+        samplepacks_path = os.path.join(mount_path, Directories.OPZ.SAMPLEPACKS)
         if not os.path.exists(samplepacks_path):
             return False, "Invalid OP-Z folder: 'samplepacks' directory not found."
 
@@ -264,12 +265,12 @@ def update_device_status(device, connected, path=None, usb_detected=False, mode=
         })
 
         # Update config if not in developer mode
-        if not get_config_setting("DEVELOPER_MODE", False):
+        if not get_config_setting(Config.DEVELOPER_MODE, False):
             if connected and path and mode == "storage":
-                config_key = "OPZ_DETECTED_PATH" if device == "opz" else "OP1_DETECTED_PATH"
+                config_key = Config.MountPaths.OPZ_DETECTED if device == "opz" else Config.MountPaths.OP1_DETECTED
                 set_config_setting(config_key, path)
             elif not connected:
-                config_key = "OPZ_DETECTED_PATH" if device == "opz" else "OP1_DETECTED_PATH"
+                config_key = Config.MountPaths.OPZ_DETECTED if device == "opz" else Config.MountPaths.OP1_DETECTED
                 set_config_setting(config_key, "")
 
 
@@ -635,10 +636,10 @@ def open_device_directory():
 
     if not path:
         # Try to get from config
-        if get_config_setting("DEVELOPER_MODE", False):
-            config_key = "OPZ_MOUNT_PATH" if device == "opz" else "OP1_MOUNT_PATH"
+        if get_config_setting(Config.DEVELOPER_MODE, False):
+            config_key = Config.MountPaths.OPZ if device == "opz" else Config.MountPaths.OP1
         else:
-            config_key = "OPZ_DETECTED_PATH" if device == "opz" else "OP1_DETECTED_PATH"
+            config_key = Config.MountPaths.OPZ_DETECTED if device == "opz" else Config.MountPaths.OP1_DETECTED
         path = get_config_setting(config_key)
 
     if not path or not os.path.exists(path):

@@ -4,6 +4,7 @@ import json
 import logging
 import subprocess
 from flask import Blueprint, request, jsonify, current_app
+from .constants import Config, Directories, Files
 
 # Create Blueprint for config routes
 config_bp = Blueprint('config', __name__)
@@ -86,13 +87,10 @@ def set_logger_level(level_name: str):
 # this is run after each time a config setting is changed via set-config-setting
 
 def run_config_task(changed_key):
-
-    match changed_key:
-        case "LOGGER_LEVEL":
-            set_logger_level(app_config.get("LOGGER_LEVEL", "INFO"))
-        case _:
-            None
-            # could log something here
+    # Use if/elif instead of match/case since we need to compare with constant values
+    if changed_key == Config.LOGGER_LEVEL:
+        set_logger_level(app_config.get(Config.LOGGER_LEVEL, "INFO"))
+    # could log something here for other keys
 
 def run_all_config_tasks():
 
@@ -137,21 +135,21 @@ def reset_config():
 # Get a config setting with an optional default
 def get_config_setting(key, default=None):
     # Special case: return default working directory if not set
-    if key == "WORKING_DIRECTORY":
+    if key == Config.WORKING_DIRECTORY:
         value = app_config.get(key)
         if not value:
             return get_default_working_directory(PROJECT_NAME)
         return value
 
     # Special case: return default selected device if not set
-    if key == "SELECTED_DEVICE":
+    if key == Config.SELECTED_DEVICE:
         value = app_config.get(key)
         if not value:
             return "opz"  # Default to OP-Z
         return value
 
     # Special case: DEVELOPER_MODE defaults to False
-    if key == "DEVELOPER_MODE":
+    if key == Config.DEVELOPER_MODE:
         value = app_config.get(key)
         if value is None:
             return False
@@ -177,12 +175,12 @@ def get_device_mount_path(device):
     Returns:
         Mount path string or empty string if not set
     """
-    if get_config_setting("DEVELOPER_MODE", False):
+    if get_config_setting(Config.DEVELOPER_MODE, False):
         # Use manual path in developer mode
-        key = "OPZ_MOUNT_PATH" if device == "opz" else "OP1_MOUNT_PATH"
+        key = Config.MountPaths.OPZ if device == "opz" else Config.MountPaths.OP1
     else:
         # Use auto-detected path in normal mode
-        key = "OPZ_DETECTED_PATH" if device == "opz" else "OP1_DETECTED_PATH"
+        key = Config.MountPaths.OPZ_DETECTED if device == "opz" else Config.MountPaths.OP1_DETECTED
 
     return get_config_setting(key, "")
 
@@ -257,7 +255,7 @@ def remove_config_setting_route():
 def reset_config_flask():
     global config_load_error, config_write_disabled
     config_write_disabled = False  # Re-enable writes before reset
-    delete_config_setting("OPZ_MOUNT_PATH", save=False)
+    delete_config_setting(Config.MountPaths.OPZ, save=False)
     reset_config()
     config_load_error = None  # Clear error state after reset
     return jsonify({"success": True, "message": "Configuration reset successfully"})
@@ -306,19 +304,19 @@ def open_config_in_editor():
 @config_bp.route('/get-config/general')
 def get_general_config():
     OPZ_MOUNT_PATH = get_device_mount_path("opz")
-    general_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'general.json')
+    general_json_path = os.path.join(OPZ_MOUNT_PATH, Directories.OPZ.CONFIG, Files.OPZ.Config.GENERAL)
     return jsonify(read_json_from_path(general_json_path))
 
 @config_bp.route('/get-config/midi')
 def get_midi_config():
     OPZ_MOUNT_PATH = get_device_mount_path("opz")
-    midi_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'midi.json')
+    midi_json_path = os.path.join(OPZ_MOUNT_PATH, Directories.OPZ.CONFIG, Files.OPZ.Config.MIDI)
     return jsonify(read_json_from_path(midi_json_path))
 
 @config_bp.route('/save-config/general', methods=['POST'])
 def save_general_config():
     OPZ_MOUNT_PATH = get_device_mount_path("opz")
-    general_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'general.json')
+    general_json_path = os.path.join(OPZ_MOUNT_PATH, Directories.OPZ.CONFIG, Files.OPZ.Config.GENERAL)
     data = request.get_json()
     write_json_to_path(general_json_path, data)
     return '', 204
@@ -326,7 +324,7 @@ def save_general_config():
 @config_bp.route('/save-config/midi', methods=['POST'])
 def save_midi_config():
     OPZ_MOUNT_PATH = get_device_mount_path("opz")
-    midi_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'midi.json')
+    midi_json_path = os.path.join(OPZ_MOUNT_PATH, Directories.OPZ.CONFIG, Files.OPZ.Config.MIDI)
     data = request.get_json()
     write_json_to_path(midi_json_path, data)
     return '', 204
@@ -334,7 +332,7 @@ def save_midi_config():
 @config_bp.route('/get-config/dmx')
 def get_dmx_config():
     OPZ_MOUNT_PATH = get_device_mount_path("opz")
-    dmx_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'dmx.json')
+    dmx_json_path = os.path.join(OPZ_MOUNT_PATH, Directories.OPZ.CONFIG, Files.OPZ.Config.DMX)
     if not os.path.exists(dmx_json_path):
         return jsonify({"error": "dmx.json not found"}), 404
     with open(dmx_json_path, 'r') as f:
@@ -344,7 +342,7 @@ def get_dmx_config():
 @config_bp.route('/save-config/dmx', methods=['POST'])
 def save_dmx_config():
     OPZ_MOUNT_PATH = get_device_mount_path("opz")
-    dmx_json_path = os.path.join(OPZ_MOUNT_PATH, 'config', 'dmx.json')
+    dmx_json_path = os.path.join(OPZ_MOUNT_PATH, Directories.OPZ.CONFIG, Files.OPZ.Config.DMX)
     data = request.get_json()
     content = data.get('content', '')
     with open(dmx_json_path, 'w') as f:

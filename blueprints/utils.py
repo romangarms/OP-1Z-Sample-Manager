@@ -2,15 +2,7 @@
 import os
 import sys
 
-
-# OP-1 Tape Constants
-TAPE_TRACK_IDS = [1, 2, 3, 4]
-ALBUM_SIDE_IDS = ["a", "b"]
-TAPE_DIR = "tape"
-ALBUM_DIR = "album"
-TAPE_TRACK_PREFIX = "track_"
-ALBUM_SIDE_PREFIX = "side_"
-AIFF_EXTENSION = ".aif"
+# Export tape constants
 EXPORT_TAPE_PREFIX = "op1_tape_track_"
 EXPORT_ALBUM_PREFIX = "op1_album_side_"
 
