@@ -14,16 +14,23 @@ import zipfile
 import tempfile
 
 # FFMPEG download URLs
+# Multiple fallback URLs for each platform to ensure reliability
 FFMPEG_URLS = {
     "darwin": {
-        # martin-riedl.de provides signed and notarized builds for macOS
-        # URL pattern: /redirect/latest/macos/{arm64,amd64}/release/ffmpeg.zip
-        "arm64": "https://ffmpeg.martin-riedl.de/redirect/latest/macos/arm64/release/ffmpeg.zip",
-        "x86_64": "https://ffmpeg.martin-riedl.de/redirect/latest/macos/amd64/release/ffmpeg.zip",
+        "arm64": [
+            "https://ffmpeg.martin-riedl.de/redirect/latest/macos/arm64/release/ffmpeg.zip",  # Primary: Latest signed builds
+            "https://www.osxexperts.net/ffmpeg80arm.zip",  # Fallback: Stable FFmpeg 8.0
+        ],
+        "x86_64": [
+            "https://ffmpeg.martin-riedl.de/redirect/latest/macos/amd64/release/ffmpeg.zip",  # Primary: Latest signed builds
+            "https://evermeet.cx/ffmpeg/get/zip",  # Fallback: Latest snapshot API
+        ],
     },
     "win32": {
-        # gyan.dev essentials build for Windows
-        "url": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
+        "url": [
+            "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",  # Primary: Original source
+            "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip",  # Fallback: GitHub hosted
+        ],
     }
 }
 
@@ -47,11 +54,31 @@ def get_ffmpeg_path():
         return os.path.join(bin_dir, "ffmpeg.exe")
 
 
-def download_file(url, dest_path, description="file"):
-    """Download a file with progress indicator."""
-    print(f"Downloading {description}...")
-    print(f"  URL: {url}")
+def download_with_fallback(urls, dest_path, description="file"):
+    """Download a file from a list of URLs, trying each until one succeeds."""
+    # Support both single URL (string) and multiple URLs (list)
+    if isinstance(urls, str):
+        urls = [urls]
 
+    print(f"Downloading {description}...")
+
+    for i, url in enumerate(urls, 1):
+        print(f"  Attempt {i}/{len(urls)}")
+        print(f"  URL: {url}")
+
+        if download_file(url, dest_path, description):
+            return True
+
+        # If not the last URL, try the next one
+        if i < len(urls):
+            print(f"  Trying fallback source...")
+
+    print(f"\nAll download attempts failed for {description}")
+    return False
+
+
+def download_file(url, dest_path, description="file"):
+    """Download a file with progress indicator and User-Agent header."""
     def reporthook(block_num, block_size, total_size):
         if total_size > 0:
             downloaded = block_num * block_size
@@ -59,11 +86,30 @@ def download_file(url, dest_path, description="file"):
             print(f"\r  Progress: {percent}%", end="", flush=True)
 
     try:
-        urllib.request.urlretrieve(url, dest_path, reporthook)
+        # Add User-Agent header to avoid bot detection
+        req = urllib.request.Request(
+            url,
+            headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'}
+        )
+        # Use urlopen with custom request, then retrieve
+        with urllib.request.urlopen(req) as response:
+            with open(dest_path, 'wb') as out_file:
+                total_size = int(response.headers.get('Content-Length', 0))
+                downloaded = 0
+                block_size = 8192
+                block_num = 0
+                while True:
+                    buffer = response.read(block_size)
+                    if not buffer:
+                        break
+                    downloaded += len(buffer)
+                    out_file.write(buffer)
+                    block_num += 1
+                    reporthook(block_num, block_size, total_size)
         print()  # New line after progress
         return True
     except Exception as e:
-        print(f"\nError downloading: {e}")
+        print(f"\n  Error: {e}")
         return False
 
 
@@ -95,7 +141,7 @@ def download_ffmpeg_macos():
         tmp_path = tmp.name
 
     try:
-        if not download_file(url, tmp_path, f"FFMPEG for macOS ({arch})"):
+        if not download_with_fallback(url, tmp_path, f"FFMPEG for macOS ({arch})"):
             return False
 
         # Extract ffmpeg from the zip archive
@@ -141,15 +187,17 @@ def download_ffmpeg_windows():
         tmp_path = tmp.name
 
     try:
-        if not download_file(url, tmp_path, "FFMPEG for Windows"):
+        if not download_with_fallback(url, tmp_path, "FFMPEG for Windows"):
             return False
 
         # Extract ffmpeg.exe from the archive
         print("Extracting FFMPEG...")
         with zipfile.ZipFile(tmp_path, 'r') as zf:
-            # Find ffmpeg.exe in the archive
+            # Look for ffmpeg.exe in the archive - could be in various directory structures
+            # BtbN: ffmpeg-master-latest-win64-gpl-shared/bin/ffmpeg.exe
+            # gyan.dev: ffmpeg-x.x.x-essentials_build/bin/ffmpeg.exe
             for name in zf.namelist():
-                if name.endswith("bin/ffmpeg.exe"):
+                if name.endswith("ffmpeg.exe") and not name.endswith("/ffmpeg.exe"):
                     # Extract to temp location then move
                     with tempfile.TemporaryDirectory() as extract_dir:
                         zf.extract(name, extract_dir)
