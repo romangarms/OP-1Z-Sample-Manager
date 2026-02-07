@@ -27,6 +27,12 @@ class Config:
         OPZ_DETECTED = "OPZ_DETECTED_PATH"
         OP1_DETECTED = "OP1_DETECTED_PATH"
 
+    # Third-party integrations
+    class Integrations:
+        """Configuration keys for external service integrations."""
+        OP1FUN_USER_EMAIL = "OP1FUN_USER_EMAIL"
+        OP1FUN_USER_TOKEN = "OP1FUN_USER_TOKEN"
+        OP1FUN_TOKEN_OBTAINED_AT = "OP1FUN_TOKEN_OBTAINED_AT"
 
 # ===================================================================
 # Directory Names
@@ -99,3 +105,13 @@ class TapeAlbum:
     """OP-1 tape and album track/side identifiers."""
     TRACK_IDS = [1, 2, 3, 4]
     SIDE_IDS = ["a", "b"]
+
+# ===================================================================
+# op1.fun Integration Constants
+# ===================================================================
+
+class OP1FUN:
+    """Constants related to the op-1.fun integration."""
+
+    OP1FUN_API_BASE_URL = "https://api.op1.fun/v1"
+    OP1FUN_API_TOKEN_URL = f"{OP1FUN_API_BASE_URL}/api_token"
