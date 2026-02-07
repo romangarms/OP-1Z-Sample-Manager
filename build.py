@@ -9,21 +9,18 @@ import sys
 import shutil
 import subprocess
 import urllib.request
-import tarfile
-import zipfile
 import tempfile
+import gzip
 
 # FFMPEG download URLs
 FFMPEG_URLS = {
     "darwin": {
-        # martin-riedl.de provides signed and notarized builds for macOS
-        # URL pattern: /redirect/latest/macos/{arm64,amd64}/release/ffmpeg.zip
-        "arm64": "https://ffmpeg.martin-riedl.de/redirect/latest/macos/arm64/release/ffmpeg.zip",
-        "x86_64": "https://ffmpeg.martin-riedl.de/redirect/latest/macos/amd64/release/ffmpeg.zip",
+        # eugeneware/ffmpeg-static publishes per-platform binaries on GitHub Releases
+        "arm64": "https://github.com/eugeneware/ffmpeg-static/releases/latest/download/ffmpeg-darwin-arm64.gz",
+        "x86_64": "https://github.com/eugeneware/ffmpeg-static/releases/latest/download/ffmpeg-darwin-x64.gz",
     },
     "win32": {
-        # gyan.dev essentials build for Windows
-        "url": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
+        "x64": "https://github.com/eugeneware/ffmpeg-static/releases/latest/download/ffmpeg-win32-x64.gz",
     }
 }
 
@@ -84,44 +81,26 @@ def download_ffmpeg_macos():
 
     ffmpeg_path = get_ffmpeg_path()
 
-    # Get architecture-specific URL
     arch = get_macos_arch()
     url = FFMPEG_URLS["darwin"][arch]
 
     print(f"Detected macOS architecture: {arch}")
 
     # Download to temp file
-    with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(suffix=".gz", delete=False) as tmp:
         tmp_path = tmp.name
 
     try:
         if not download_file(url, tmp_path, f"FFMPEG for macOS ({arch})"):
             return False
 
-        # Extract ffmpeg from the zip archive
+        # Extract ffmpeg from gzipped binary.
         print("Extracting FFMPEG...")
-        with zipfile.ZipFile(tmp_path, 'r') as zf:
-            # The zip contains just the ffmpeg binary
-            for name in zf.namelist():
-                if name == "ffmpeg" or name.endswith("/ffmpeg"):
-                    with zf.open(name) as src, open(ffmpeg_path, 'wb') as dst:
-                        dst.write(src.read())
-                    # Make executable
-                    os.chmod(ffmpeg_path, 0o755)
-                    print(f"FFMPEG installed to: {ffmpeg_path}")
-                    return True
-
-            # If no ffmpeg found, try extracting first file (might just be ffmpeg)
-            names = zf.namelist()
-            if len(names) == 1:
-                with zf.open(names[0]) as src, open(ffmpeg_path, 'wb') as dst:
-                    dst.write(src.read())
-                os.chmod(ffmpeg_path, 0o755)
-                print(f"FFMPEG installed to: {ffmpeg_path}")
-                return True
-
-        print("Error: ffmpeg not found in archive")
-        return False
+        with gzip.open(tmp_path, 'rb') as src, open(ffmpeg_path, 'wb') as dst:
+            shutil.copyfileobj(src, dst)
+        os.chmod(ffmpeg_path, 0o755)
+        print(f"FFMPEG installed to: {ffmpeg_path}")
+        return True
     finally:
         # Clean up temp file
         if os.path.exists(tmp_path):
@@ -134,32 +113,21 @@ def download_ffmpeg_windows():
     os.makedirs(bin_dir, exist_ok=True)
 
     ffmpeg_path = get_ffmpeg_path()
-    url = FFMPEG_URLS["win32"]["url"]
-
+    url = FFMPEG_URLS["win32"]["x64"]
     # Download to temp file
-    with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(suffix=".gz", delete=False) as tmp:
         tmp_path = tmp.name
 
     try:
         if not download_file(url, tmp_path, "FFMPEG for Windows"):
             return False
 
-        # Extract ffmpeg.exe from the archive
+        # Extract ffmpeg.exe from gzipped binary.
         print("Extracting FFMPEG...")
-        with zipfile.ZipFile(tmp_path, 'r') as zf:
-            # Find ffmpeg.exe in the archive
-            for name in zf.namelist():
-                if name.endswith("bin/ffmpeg.exe"):
-                    # Extract to temp location then move
-                    with tempfile.TemporaryDirectory() as extract_dir:
-                        zf.extract(name, extract_dir)
-                        extracted_path = os.path.join(extract_dir, name)
-                        shutil.copy2(extracted_path, ffmpeg_path)
-                    print(f"FFMPEG installed to: {ffmpeg_path}")
-                    return True
-
-        print("Error: ffmpeg.exe not found in archive")
-        return False
+        with gzip.open(tmp_path, 'rb') as src, open(ffmpeg_path, 'wb') as dst:
+            shutil.copyfileobj(src, dst)
+        print(f"FFMPEG installed to: {ffmpeg_path}")
+        return True
     finally:
         # Clean up temp file
         if os.path.exists(tmp_path):

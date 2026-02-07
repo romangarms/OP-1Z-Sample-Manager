@@ -44,6 +44,10 @@ hiddenimports += [
     'blueprints.backup',
 ]
 
+# Include migration scripts loaded via importlib to avoid missing package errors.
+hiddenimports += ['blueprints.migration', 'blueprints.migration.migration_scripts']
+hiddenimports += collect_submodules('blueprints.migration.migration_scripts')
+
 a = Analysis(
     ['main.py'],
     pathex=[],

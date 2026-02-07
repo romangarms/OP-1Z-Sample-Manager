@@ -1,3 +1,45 @@
+// Settings management
+async function loadSettings() {
+    const settings = {
+        autoPitch: true // default
+    };
+
+    try {
+        const res = await fetch('/get-config-setting?config_option=AUTO_PITCH_SYNTH_SAMPLES');
+        const data = await res.json();
+        if (data.config_value !== undefined && data.config_value !== null && data.config_value !== '') {
+            settings.autoPitch = data.config_value;
+        }
+    } catch (e) {
+        console.warn('Failed to load settings:', e);
+    }
+
+    return settings;
+}
+
+async function saveSettings(settings) {
+    try {
+        await fetch('/set-config-setting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                config_option: 'AUTO_PITCH_SYNTH_SAMPLES',
+                config_value: settings.autoPitch
+            })
+        });
+    } catch (e) {
+        console.warn('Failed to save settings:', e);
+    }
+}
+
+async function openSettingsModal() {
+    const settings = await loadSettings();
+    document.getElementById('setting-auto-pitch').checked = settings.autoPitch;
+
+    const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
+    modal.show();
+}
+
 // Current device selection
 let currentDevice = 'opz';
 
@@ -818,6 +860,16 @@ function deleteOp1Subdirectory(path) {
 
 // Set up OP-Z sample box drag-and-drop after DOM loads
 document.addEventListener('DOMContentLoaded', () => {
+    // Setup settings event listener
+    const settingsCheckbox = document.getElementById('setting-auto-pitch');
+    if (settingsCheckbox) {
+        settingsCheckbox.addEventListener('change', async (e) => {
+            const settings = await loadSettings();
+            settings.autoPitch = e.target.checked;
+            await saveSettings(settings);
+        });
+    }
+
     document.querySelectorAll(".samplepackbox").forEach(box => {
         box.addEventListener("dragover", (e) => {
             e.preventDefault();

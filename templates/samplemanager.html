@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import sample_category_pair, nav_button, device_tabs, error_container, loading_overlay %}
+{% from 'macros.html' import sample_category_pair, nav_button, device_tabs, error_container, loading_overlay, settings_modal %}
 
 {%block stylesheets %}
 <link rel="stylesheet" href="/static/css/samplemanager.css">
@@ -16,6 +16,10 @@
 <div class="header-row">
     {{ nav_button('/', 'Home', icon='home') }}
     {{ device_tabs() }}
+    <button onclick="openSettingsModal()" class="nav-btn nav-btn-secondary">
+        <i data-lucide="settings"></i>
+        Settings
+    </button>
     <button id="open-directory-btn" onclick="openDirectory()" class="nav-btn nav-btn-warning">
         <i data-lucide="folder-open"></i>
         Open Directory
@@ -131,6 +135,10 @@
         </div>
     </div>
 </div>
+
+{% call settings_modal() %}
+{# Add page-specific settings here if needed #}
+{% endcall %}
 
 <script src="/static/js/samplemanager.js"></script>
 <script>

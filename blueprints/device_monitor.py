@@ -13,15 +13,17 @@ import subprocess
 from queue import Queue
 from flask import Blueprint, Response, jsonify, current_app, request
 from .config import get_config_setting, set_config_setting
+from .devices import OP_Z, OP_1, get_device_by_id
+from .constants import Config, Directories
 
 # Create Blueprint
 device_monitor_bp = Blueprint('device_monitor', __name__)
 
-# Teenage Engineering USB Identifiers (decimal values)
-TE_VENDOR_ID = 9063         # 0x2367
-OPZ_PRODUCT_ID = 12         # 0x000c - OP-Z (both normal and disk mode use same ID)
-OP1_PRODUCT_ID = 2          # 0x0002 - USB Storage mode
-OP1_PRODUCT_ID_OTHER = 4    # 0x0004 - Normal/MIDI mode (no disk access)
+# Teenage Engineering USB Identifiers (decimal values) - now imported from devices module
+TE_VENDOR_ID = OP_Z.usb_vendor_id  # 0x2367 - same for both devices
+OPZ_PRODUCT_ID = OP_Z.usb_product_ids[0]  # 0x000c - OP-Z (both normal and disk mode use same ID)
+OP1_PRODUCT_ID = OP_1.usb_product_ids[0]  # 0x0002 - USB Storage mode
+OP1_PRODUCT_ID_OTHER = OP_1.usb_product_ids[1]  # 0x0004 - Normal/MIDI mode (no disk access)
 
 # USB class identifiers for distinguishing device modes
 USB_CLASS_STORAGE = "USBSTOR"  # Mass storage class
@@ -94,7 +96,7 @@ def validate_device_folder_structure(device, mount_path):
         "5-bass", "6-lead", "7-arpeggio", "8-chord"
     ]
 
-    device_name = "OP-1" if device == "op1" else "OP-Z"
+    device_name = get_device_by_id(device).name
 
     if not mount_path:
         return False, f"Please connect your {device_name} and try again. If it isn't being detected, go to Utility Settings, enable developer mode, and select the device path."
@@ -104,8 +106,8 @@ def validate_device_folder_structure(device, mount_path):
 
     if device == "op1":
         # OP-1: Check for drum/ and synth/ directories
-        drum_path = os.path.join(mount_path, "drum")
-        synth_path = os.path.join(mount_path, "synth")
+        drum_path = os.path.join(mount_path, Directories.OP1.DRUM)
+        synth_path = os.path.join(mount_path, Directories.OP1.SYNTH)
 
         if not os.path.exists(drum_path) or not os.path.isdir(drum_path):
             return False, "Invalid OP-1 folder: 'drum' directory not found."
@@ -114,7 +116,7 @@ def validate_device_folder_structure(device, mount_path):
             return False, "Invalid OP-1 folder: 'synth' directory not found."
     else:
         # OP-Z: Check for samplepacks/ directory with category folders
-        samplepacks_path = os.path.join(mount_path, "samplepacks")
+        samplepacks_path = os.path.join(mount_path, Directories.OPZ.SAMPLEPACKS)
         if not os.path.exists(samplepacks_path):
             return False, "Invalid OP-Z folder: 'samplepacks' directory not found."
 
@@ -251,7 +253,7 @@ def update_device_status(device, connected, path=None, usb_detected=False, mode=
 
     # Only broadcast if status changed
     if old_status != new_status:
-        device_name = "OP-1" if device == "op1" else "OP-Z"
+        device_name = get_device_by_id(device).name
         print(f"Broadcasting SSE: {device_name} connected={connected}, path={path}, mode={mode}")
         broadcast_sse_event("device_status", {
             "device": device,
@@ -263,12 +265,12 @@ def update_device_status(device, connected, path=None, usb_detected=False, mode=
         })
 
         # Update config if not in developer mode
-        if not get_config_setting("DEVELOPER_MODE", False):
+        if not get_config_setting(Config.DEVELOPER_MODE, False):
             if connected and path and mode == "storage":
-                config_key = "OPZ_DETECTED_PATH" if device == "opz" else "OP1_DETECTED_PATH"
+                config_key = Config.MountPaths.OPZ_DETECTED if device == "opz" else Config.MountPaths.OP1_DETECTED
                 set_config_setting(config_key, path)
             elif not connected:
-                config_key = "OPZ_DETECTED_PATH" if device == "opz" else "OP1_DETECTED_PATH"
+                config_key = Config.MountPaths.OPZ_DETECTED if device == "opz" else Config.MountPaths.OP1_DETECTED
                 set_config_setting(config_key, "")
 
 
@@ -479,6 +481,14 @@ def scan_for_connected_devices():
     except Exception as e:
         print(f"Error scanning for USB devices: {e}")
 
+    # Clear stale config for devices that weren't found during scan
+    for device in ["opz", "op1"]:
+        with device_status_lock:
+            was_found = device_status[device]["connected"]
+        if not was_found:
+            # This will clear any stale config path via update_device_status logic
+            update_device_status(device, connected=False, path=None, usb_detected=False, mode=None)
+
 
 def start_usb_monitoring():
     """Start the USB monitoring thread."""
@@ -554,8 +564,8 @@ def get_device_status():
         }
 
     # Add device display names
-    status["opz"]["device_name"] = "OP-Z"
-    status["op1"]["device_name"] = "OP-1"
+    status["opz"]["device_name"] = OP_Z.name
+    status["op1"]["device_name"] = OP_1.name
 
     return jsonify(status)
 
@@ -579,7 +589,7 @@ def device_events():
                 import json
                 for device in ["opz", "op1"]:
                     status = device_status[device].copy()
-                    device_name = "OP-1" if device == "op1" else "OP-Z"
+                    device_name = get_device_by_id(device).name
                     event_data = json.dumps({
                         "type": "device_status",
                         "device": device,
@@ -626,10 +636,10 @@ def open_device_directory():
 
     if not path:
         # Try to get from config
-        if get_config_setting("DEVELOPER_MODE", False):
-            config_key = "OPZ_MOUNT_PATH" if device == "opz" else "OP1_MOUNT_PATH"
+        if get_config_setting(Config.DEVELOPER_MODE, False):
+            config_key = Config.MountPaths.OPZ if device == "opz" else Config.MountPaths.OP1
         else:
-            config_key = "OPZ_DETECTED_PATH" if device == "opz" else "OP1_DETECTED_PATH"
+            config_key = Config.MountPaths.OPZ_DETECTED if device == "opz" else Config.MountPaths.OP1_DETECTED
         path = get_config_setting(config_key)
 
     if not path or not os.path.exists(path):
