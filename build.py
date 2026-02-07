@@ -97,7 +97,7 @@ def download_ffmpeg_macos():
         # Extract ffmpeg from gzipped binary.
         print("Extracting FFMPEG...")
         with gzip.open(tmp_path, 'rb') as src, open(ffmpeg_path, 'wb') as dst:
-            dst.write(src.read())
+            shutil.copyfileobj(src, dst)
         os.chmod(ffmpeg_path, 0o755)
         print(f"FFMPEG installed to: {ffmpeg_path}")
         return True
@@ -125,7 +125,7 @@ def download_ffmpeg_windows():
         # Extract ffmpeg.exe from gzipped binary.
         print("Extracting FFMPEG...")
         with gzip.open(tmp_path, 'rb') as src, open(ffmpeg_path, 'wb') as dst:
-            dst.write(src.read())
+            shutil.copyfileobj(src, dst)
         print(f"FFMPEG installed to: {ffmpeg_path}")
         return True
     finally:
