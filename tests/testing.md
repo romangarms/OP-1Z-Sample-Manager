@@ -19,10 +19,10 @@ The repo includes a `pytest.ini` at the root that:
 
 These environment variables override runtime paths, including in migrations:
 
-- `OP1Z_SM_CONFIG_DIR` sets the config directory
-- `OP1Z_SM_WORKING_DIR` sets the working directory
+- `OP-1Z_SM_CONFIG_DIR` sets the config directory
+- `OP-1Z_SM_WORKING_DIR` sets the working directory
 
-When `OP1Z_SM_WORKING_DIR` causes v1 and v2 working directories to resolve to
+When `OP-1Z_SM_WORKING_DIR` causes v1 and v2 working directories to resolve to
 the same path, the v2.0.0 migration skips working-directory copying to avoid
 self-copy.
 
