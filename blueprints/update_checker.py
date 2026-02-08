@@ -9,7 +9,7 @@ from packaging import version
 update_checker_bp = Blueprint('update_checker', __name__)
 
 # Constants:
-GITHUB_LATEST_RELEASE_URL = "https://api.github.com/repos/romangarms/OP1Z-Sample-Manager/releases/latest"
+GITHUB_LATEST_RELEASE_URL = "https://api.github.com/repos/romangarms/OP-1Z-Sample-Manager/releases/latest"
 from .github_version_file import VERSION as APP_VERSION
 
 @update_checker_bp.route('/get_app_version', methods=['GET'])
