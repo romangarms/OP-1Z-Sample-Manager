@@ -10,8 +10,26 @@ import os
 import sys
 import shutil
 from ..migrator import backup_file, MigrationError
+from ...constants import EnvVars
 
 TARGET_VERSION = "v2.0.0"
+
+def _get_env_path_override(env_var_name):
+    value = os.environ.get(env_var_name, "")
+    if not value:
+        return None
+    value = value.strip()
+    if not value:
+        return None
+    return os.path.expandvars(os.path.expanduser(value))
+
+
+def _paths_equal(path_a, path_b):
+    if not path_a or not path_b:
+        return False
+    a = os.path.normcase(os.path.normpath(os.path.abspath(path_a)))
+    b = os.path.normcase(os.path.normpath(os.path.abspath(path_b)))
+    return a == b
 
 def migrate(logger: logging.Logger):
     """
@@ -69,7 +87,9 @@ def migrate(logger: logging.Logger):
         logger.info("No v1 config file found; skipping config migration")
 
     # Migrate files in working directory
-    if os.path.exists(v1_work_dir):
+    if _paths_equal(v1_work_dir, v2_work_dir):
+        logger.info("v1 and v2 working directories are the same; skipping working directory migration.")
+    elif os.path.exists(v1_work_dir):
         logger.info("v1 working directory found, attempting migration to v2")
         try:
             if not os.path.exists(v2_work_dir):
@@ -97,6 +117,9 @@ def migrate(logger: logging.Logger):
 
 def get_default_working_directory(project_name):
     """Return default working directory: ~/Documents/<project_name>/"""
+    env_override = _get_env_path_override(EnvVars.WORKING_DIR)
+    if env_override:
+        return env_override
     if sys.platform == 'win32':
         # On Windows, use registry or USERPROFILE to find actual Documents folder
         # This handles OneDrive redirection and custom locations
@@ -122,6 +145,9 @@ def get_default_working_directory(project_name):
 """These are taken from the v1.0.0 config.py"""
 def v1_get_config_dir():
     """Get the appropriate config directory for the current OS."""
+    env_override = _get_env_path_override(EnvVars.CONFIG_DIR)
+    if env_override:
+        return env_override
     if sys.platform == 'darwin':
         config_dir = os.path.expanduser('~/Library/Application Support/OP-Z Sample Manager')
     elif sys.platform == 'win32':
@@ -142,7 +168,10 @@ def v1_get_config_path():
 """Taken from v2"""
 def v2_get_config_dir():
     """Get the appropriate config directory for the current OS."""
-    if sys.platform == 'darwin':
+    env_override = _get_env_path_override(EnvVars.CONFIG_DIR)
+    if env_override:
+        config_dir = env_override
+    elif sys.platform == 'darwin':
         config_dir = os.path.expanduser('~/Library/Application Support/OP-1Z Sample Manager')
     elif sys.platform == 'win32':
         config_dir = os.path.join(os.environ.get('APPDATA', ''), 'OP-1Z Sample Manager')

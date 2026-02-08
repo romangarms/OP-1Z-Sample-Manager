@@ -4,7 +4,7 @@ import json
 import logging
 import subprocess
 from flask import Blueprint, request, jsonify, current_app
-from .constants import Config, Directories, Files
+from .constants import Config, Directories, Files, EnvVars
 
 # Create Blueprint for config routes
 config_bp = Blueprint('config', __name__)
@@ -13,9 +13,22 @@ config_bp = Blueprint('config', __name__)
 PROJECT_NAME = "OP-1Z-Sample-Manager"
 
 
+def _get_env_path_override(env_var_name):
+    value = os.environ.get(env_var_name, "")
+    if not value:
+        return None
+    value = value.strip()
+    if not value:
+        return None
+    return os.path.expandvars(os.path.expanduser(value))
+
+
 def get_config_dir():
     """Get the appropriate config directory for the current OS."""
-    if sys.platform == 'darwin':
+    env_override = _get_env_path_override(EnvVars.CONFIG_DIR)
+    if env_override:
+        config_dir = env_override
+    elif sys.platform == 'darwin':
         config_dir = os.path.expanduser('~/Library/Application Support/OP-1Z Sample Manager')
     elif sys.platform == 'win32':
         config_dir = os.path.join(os.environ.get('APPDATA', ''), 'OP-1Z Sample Manager')
@@ -29,9 +42,6 @@ def get_config_dir():
 def get_config_path():
     """Get the full path to the config file."""
     return os.path.join(get_config_dir(), 'op-1z_sm_config.json')
-
-
-CONFIG_PATH = get_config_path()
 app_config = {}
 config_load_error = None  # Stores error details if config fails to load
 config_write_disabled = False  # Blocks config writes when True (set on parse error)
@@ -39,6 +49,9 @@ config_write_disabled = False  # Blocks config writes when True (set on parse er
 
 def get_default_working_directory(project_name):
     """Return default working directory: ~/Documents/<project_name>/"""
+    env_override = _get_env_path_override(EnvVars.WORKING_DIR)
+    if env_override:
+        return env_override
     if sys.platform == 'win32':
         # On Windows, use registry or USERPROFILE to find actual Documents folder
         # This handles OneDrive redirection and custom locations
@@ -98,6 +111,12 @@ def run_all_config_tasks():
         run_config_task(key)
 
 
+def reset_config_state():
+    """Clear in-memory config state and error flags."""
+    global config_load_error, config_write_disabled
+    app_config.clear()
+    config_load_error = None
+    config_write_disabled = False
 
 
 # Function to load the configuration from a JSON file
@@ -105,10 +124,11 @@ def load_config():
     global config_load_error, config_write_disabled
     config_load_error = None  # Reset error state
     config_write_disabled = False  # Reset write protection
-    if os.path.exists(CONFIG_PATH):
+    app_config.clear()  # Ensure stale config is cleared even if no file exists
+    config_path = get_config_path()
+    if os.path.exists(config_path):
         try:
-            loaded = read_json_from_path(CONFIG_PATH)
-            app_config.clear()
+            loaded = read_json_from_path(config_path)
             app_config.update(loaded)
         except json.JSONDecodeError as e:
             config_load_error = {
@@ -124,11 +144,11 @@ def load_config():
 def save_config():
     if config_write_disabled:
         return  # Don't write when config is in error state
-    write_json_to_path(CONFIG_PATH, app_config)
+    write_json_to_path(get_config_path(), app_config)
 
 # Function to reset configuration (clears file and memory)
 def reset_config():
-    write_json_to_path(CONFIG_PATH, {})
+    write_json_to_path(get_config_path(), {})
     app_config.clear()
     return app_config
 
