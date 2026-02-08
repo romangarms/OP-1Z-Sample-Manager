@@ -22,6 +22,7 @@ Note any related issues (Delete if there are none)
 > Use the `build.py` script to perform the build.
 
 **Since we do not currently have automated tests, please describe the manual steps taken to verify these changes.**
+<!-- We have since added python testing, if you have added python code, please create tests for it. -->
 
  - [ ] **Manual Step 1:** (eg. Open Utility Settings)
  - [ ] **Manual Step 2:** (eg. Toggle "Developer Mode")
