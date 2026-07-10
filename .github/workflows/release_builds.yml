@@ -14,7 +14,6 @@ jobs:
     uses: ./.github/workflows/_tests.yml
 
   build_windows:
-    needs: tests
     uses: ./.github/workflows/_build.yml
     with:
       os: windows-latest
@@ -24,7 +23,6 @@ jobs:
       fetch_changelog: true
 
   build_macos:
-    needs: tests
     uses: ./.github/workflows/_build.yml
     with:
       os: macos-latest
@@ -35,6 +33,7 @@ jobs:
 
   release:
     needs:
+      - tests
       - build_windows
       - build_macos
     runs-on: ubuntu-latest
