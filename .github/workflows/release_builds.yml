@@ -21,6 +21,7 @@ jobs:
       version_label: ${{ github.ref_name }}
       upload_artifact: true
       fetch_changelog: true
+    secrets: inherit
 
   build_macos:
     uses: ./.github/workflows/_build.yml
@@ -30,6 +31,8 @@ jobs:
       version_label: ${{ github.ref_name }}
       upload_artifact: true
       fetch_changelog: true
+      notarize: true
+    secrets: inherit
 
   release:
     needs:

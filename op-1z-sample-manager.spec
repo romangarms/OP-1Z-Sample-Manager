@@ -86,7 +86,11 @@ if sys.platform == 'win32':
         icon='static/favicon.ico',
     )
 else:
-    # macOS: Folder mode, then wrap in .app bundle
+    # macOS: Folder mode, then wrap in .app bundle.
+    # Signing is opt-in via MACOS_CODESIGN_IDENTITY so local/unsigned builds still work.
+    codesign_identity = os.environ.get('MACOS_CODESIGN_IDENTITY') or None
+    entitlements_file = 'entitlements.plist' if codesign_identity else None
+
     exe = EXE(
         pyz,
         a.scripts,
@@ -101,8 +105,8 @@ else:
         disable_windowed_traceback=False,
         argv_emulation=True,
         target_arch=None,
-        codesign_identity=None,
-        entitlements_file=None,
+        codesign_identity=codesign_identity,
+        entitlements_file=entitlements_file,
     )
 
     coll = COLLECT(

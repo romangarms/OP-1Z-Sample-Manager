@@ -20,6 +20,23 @@ on:
         required: false
         type: boolean
         default: false
+      notarize:
+        description: Submit the signed macOS app to Apple's notary service (requires signing secrets)
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      MACOS_CERTIFICATE_P12:
+        description: Base64-encoded Developer ID Application certificate (.p12)
+        required: false
+      MACOS_CERTIFICATE_PASSWORD:
+        required: false
+      APPLE_ID:
+        required: false
+      APPLE_TEAM_ID:
+        required: false
+      APPLE_APP_SPECIFIC_PASSWORD:
+        required: false
 
 jobs:
   build:
@@ -66,10 +83,60 @@ jobs:
           cat LATEST_CHANGELOG.md
           echo "----- End of Changelog -----"
 
+      - name: Import macOS signing certificate
+        if: ${{ inputs.platform == 'macos' }}
+        shell: bash
+        env:
+          MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -z "$MACOS_CERTIFICATE_P12" ]; then
+            echo "MACOS_CERTIFICATE_P12 secret not available; building unsigned."
+            exit 0
+          fi
+
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 16)"
+          CERT_PATH="$RUNNER_TEMP/certificate.p12"
+
+          echo "$MACOS_CERTIFICATE_P12" | base64 --decode > "$CERT_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$MACOS_CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          # Lets codesign use the key without a GUI prompt.
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" login.keychain-db
+          rm -f "$CERT_PATH"
+
+          IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" \
+            | grep -o '"Developer ID Application: [^"]*"' | head -n1 | tr -d '"')"
+          if [ -z "$IDENTITY" ]; then
+            echo "No 'Developer ID Application' identity found in the imported certificate."
+            security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+            exit 1
+          fi
+          echo "Signing identity: $IDENTITY"
+          echo "MACOS_CODESIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "SIGNING_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+
       - name: Build (build.py)
         shell: bash
+        env:
+          APPLE_ID: ${{ inputs.notarize && secrets.APPLE_ID || '' }}
+          APPLE_TEAM_ID: ${{ inputs.notarize && secrets.APPLE_TEAM_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ inputs.notarize && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
         run: |
           python build.py
+
+      - name: Remove signing keychain
+        if: ${{ always() && env.SIGNING_KEYCHAIN_PATH != '' }}
+        shell: bash
+        run: |
+          security delete-keychain "$SIGNING_KEYCHAIN_PATH"
 
       - name: Package artifact
         if: ${{ inputs.upload_artifact }}
@@ -84,18 +151,20 @@ jobs:
             echo "dist/ not found; build likely failed."
             exit 1
           fi
-          cd dist
           if [ "$PLATFORM" = "macos" ]; then
-            TARGET="OP-1Z Sample Manager.app"
+            # ditto keeps symlinks and resource forks intact; other archivers
+            # break the code signature and notarization ticket.
+            ditto -c -k --keepParent --sequesterRsrc \
+              "dist/OP-1Z Sample Manager.app" "artifacts/${ARTIFACT}.zip"
           else
-            TARGET="."
+            cd dist
+            if command -v 7z >/dev/null 2>&1; then
+              7z a "../artifacts/${ARTIFACT}.zip" .
+            else
+              zip -r "../artifacts/${ARTIFACT}.zip" .
+            fi
+            cd ..
           fi
-          if command -v 7z >/dev/null 2>&1; then
-            7z a "../artifacts/${ARTIFACT}.zip" "$TARGET"
-          else
-            zip -r "../artifacts/${ARTIFACT}.zip" "$TARGET"
-          fi
-          cd ..
 
       - name: Upload build artifact
         if: ${{ inputs.upload_artifact }}

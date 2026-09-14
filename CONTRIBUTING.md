@@ -40,3 +40,41 @@ Please start a thread on our [discussions page](https://github.com/romangarms/OP
 Writing an article about the project? Shared a post or video? Found an external resource mentioning it?
 
 Feel free to [let us know](https://github.com/romangarms/OP-1Z-Sample-Manager/discussions), or email Roman at [romangarms@gmail.com](mailto:romangarms@gmail.com).
+
+## Release signing (macOS)
+
+Release builds of the macOS app are code-signed with a Developer ID certificate, notarized by Apple, and stapled so Gatekeeper opens them without warnings. This is done automatically by the `Build & Release` workflow when the following repository secrets are set. If they are missing (for example on pull requests from forks), the build still succeeds but the app is unsigned.
+
+| Secret | Value |
+| --- | --- |
+| `MACOS_CERTIFICATE_P12` | Base64 of a `.p12` export of the **Developer ID Application** certificate and its private key |
+| `MACOS_CERTIFICATE_PASSWORD` | Password chosen when exporting the `.p12` |
+| `APPLE_ID` | Apple ID email of the developer account |
+| `APPLE_TEAM_ID` | 10-character Team ID from <https://developer.apple.com/account> |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password generated at <https://account.apple.com> (Sign-In and Security → App-Specific Passwords) |
+
+### One-time setup
+
+1. Create a **Developer ID Application** certificate at <https://developer.apple.com/account/resources/certificates/add>. Generate the certificate signing request with Keychain Access (Certificate Assistant → Request a Certificate From a Certificate Authority, saved to disk) and upload it. Download the resulting `.cer` and double-click it so it lands in your login keychain next to its private key.
+2. In Keychain Access, select the "Developer ID Application: …" certificate, expand it so the private key is included, right-click → Export, and save as `.p12` with a password.
+3. Add the secrets:
+
+   ```sh
+   gh secret set MACOS_CERTIFICATE_P12 < <(base64 -i certificate.p12)
+   gh secret set MACOS_CERTIFICATE_PASSWORD
+   gh secret set APPLE_ID
+   gh secret set APPLE_TEAM_ID
+   gh secret set APPLE_APP_SPECIFIC_PASSWORD
+   ```
+
+4. Delete the local `.p12` file.
+
+### Signing locally
+
+`build.py` signs the app whenever `MACOS_CODESIGN_IDENTITY` is set to the name of an identity in your keychain, and notarizes it when the three `APPLE_*` variables are also set:
+
+```sh
+MACOS_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" python build.py
+```
+
+Hardened-runtime entitlements live in `entitlements.plist`. Pull request builds are signed but not notarized; only tagged releases are notarized.

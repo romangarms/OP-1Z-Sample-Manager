@@ -179,6 +179,78 @@ def run_pyinstaller():
     return result.returncode == 0
 
 
+def get_app_bundle_path():
+    return os.path.join(get_script_dir(), "dist", "OP-1Z Sample Manager.app")
+
+
+def verify_macos_signature(app_path):
+    print("Verifying code signature...")
+    result = subprocess.run(
+        ["codesign", "--verify", "--deep", "--strict", "--verbose=2", app_path]
+    )
+    return result.returncode == 0
+
+
+def notarize_macos_app(app_path):
+    """Submit the signed .app to Apple's notary service and staple the ticket.
+
+    Requires APPLE_ID, APPLE_TEAM_ID and APPLE_APP_SPECIFIC_PASSWORD in the environment.
+    """
+    apple_id = os.environ.get("APPLE_ID")
+    team_id = os.environ.get("APPLE_TEAM_ID")
+    password = os.environ.get("APPLE_APP_SPECIFIC_PASSWORD")
+    if not (apple_id and team_id and password):
+        print("Notarization credentials not set (APPLE_ID, APPLE_TEAM_ID, "
+              "APPLE_APP_SPECIFIC_PASSWORD); skipping notarization.")
+        return True
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        zip_path = os.path.join(tmp_dir, "notarize.zip")
+        print("Compressing app for notarization...")
+        # ditto preserves symlinks and resource forks, which zip -r does not; a
+        # bundle repacked without them fails signature verification.
+        result = subprocess.run(
+            ["ditto", "-c", "-k", "--keepParent", "--sequesterRsrc", app_path, zip_path]
+        )
+        if result.returncode != 0:
+            return False
+
+        print("Submitting to Apple notary service (this can take several minutes)...")
+        result = subprocess.run([
+            "xcrun", "notarytool", "submit", zip_path,
+            "--apple-id", apple_id,
+            "--team-id", team_id,
+            "--password", password,
+            "--wait",
+        ])
+        if result.returncode != 0:
+            print("Notarization failed. Run 'xcrun notarytool log <submission-id>' for details.")
+            return False
+
+    print("Stapling notarization ticket...")
+    result = subprocess.run(["xcrun", "stapler", "staple", app_path])
+    if result.returncode != 0:
+        return False
+
+    print("Checking Gatekeeper assessment...")
+    result = subprocess.run(["spctl", "--assess", "--type", "execute", "--verbose=2", app_path])
+    return result.returncode == 0
+
+
+def sign_and_notarize_macos():
+    identity = os.environ.get("MACOS_CODESIGN_IDENTITY")
+    if not identity:
+        print("MACOS_CODESIGN_IDENTITY not set; app is unsigned.")
+        return True
+
+    app_path = get_app_bundle_path()
+    if not verify_macos_signature(app_path):
+        print("\nBuild failed: code signature verification failed")
+        return False
+
+    return notarize_macos_app(app_path)
+
+
 def main():
     """Main build process."""
     print("=" * 60)
@@ -204,6 +276,12 @@ def main():
     if not run_pyinstaller():
         print("\nBuild failed: PyInstaller error")
         sys.exit(1)
+    print()
+
+    if sys.platform == "darwin":
+        print("Step 4: Signing and notarizing...")
+        if not sign_and_notarize_macos():
+            sys.exit(1)
 
     print()
     print("=" * 60)

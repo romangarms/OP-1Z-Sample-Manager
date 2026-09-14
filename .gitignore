@@ -20,3 +20,7 @@ tmpclaude-*
 build/
 dist/
 bin/
+# signing material (never commit)
+*.p12
+*.cer
+*.certSigningRequest

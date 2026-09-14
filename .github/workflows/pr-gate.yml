@@ -20,6 +20,7 @@ jobs:
       os: windows-latest
       platform: windows
       version_label: pr-${{ github.event.pull_request.number }}
+    secrets: inherit
 
   build_macos:
     uses: ./.github/workflows/_build.yml
@@ -27,6 +28,7 @@ jobs:
       os: macos-latest
       platform: macos
       version_label: pr-${{ github.event.pull_request.number }}
+    secrets: inherit
 
   pr_gate:
     name: PR Gate
