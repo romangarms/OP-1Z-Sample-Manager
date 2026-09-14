@@ -253,6 +253,41 @@ h3 {
 }
 
 /* ===========================================
+   Developer Mode Banner
+   =========================================== */
+
+.dev-mode-banner {
+    position: sticky;
+    top: 0;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background-color: var(--third-color);
+    color: #333;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.dev-mode-banner[hidden] {
+    display: none;
+}
+
+.dev-mode-banner svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.dev-mode-banner a {
+    color: #333;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* ===========================================
    Toast Notification System
    =========================================== */
 

@@ -192,6 +192,7 @@ function toggleDeveloperMode() {
     .then(res => {
       if (res.ok) {
         updateManualPathsVisibility(isEnabled);
+        updateDevModeBanner(isEnabled);
         toast.success(
           isEnabled ? "Manual device paths enabled" : "Auto-detection enabled",
           "Developer Mode " + (isEnabled ? "Enabled" : "Disabled")
@@ -225,6 +226,13 @@ async function loadDeveloperMode() {
     updateManualPathsVisibility(isEnabled);
   } catch (err) {
     console.error("Error loading developer mode:", err);
+  }
+}
+
+function updateDevModeBanner(isEnabled) {
+  const banner = document.getElementById("dev-mode-banner");
+  if (banner) {
+    banner.hidden = !isEnabled;
   }
 }
 

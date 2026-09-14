@@ -21,6 +21,12 @@
 </head>
 
 <body>
+    <div id="dev-mode-banner" class="dev-mode-banner"{% if not developer_mode %} hidden{% endif %}>
+        <i data-lucide="triangle-alert"></i>
+        <span><strong>Developer Mode is on.</strong> Devices plugged in over USB are not auto-detected; manual paths are used instead.</span>
+        <a href="/utilitysettings">Utility Settings</a>
+    </div>
+
     <!-- Toast notification container -->
     <div id="toast-container" class="toast-container"></div>
 

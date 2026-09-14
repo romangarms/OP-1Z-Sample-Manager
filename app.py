@@ -13,6 +13,7 @@ from blueprints.backup import backup_bp
 from blueprints.device_monitor import device_monitor_bp, initialize_device_monitor
 from blueprints.update_checker import update_checker_bp
 from blueprints.sample_configurator import sample_configurator_bp
+from blueprints.constants import Config
 
 
 # Get base path for PyInstaller or normal execution
@@ -37,6 +38,10 @@ app.register_blueprint(backup_bp)
 app.register_blueprint(device_monitor_bp)
 app.register_blueprint(update_checker_bp)
 app.register_blueprint(sample_configurator_bp)
+
+@app.context_processor
+def inject_developer_mode():
+    return {"developer_mode": get_config_setting(Config.DEVELOPER_MODE, False)}
 
 # run before server startup at the end of this file
 def app_startup_tasks():
